@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1078407302493",
+    "project_id": "flogo-gen",
+    "storage_bucket": "flogo-gen.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078407302493:android:6515019ab2e0e6c48cecb4",
+        "android_client_info": {
+          "package_name": "com.logo.f_logo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBriIPYvHt8KW5ljTnQotkIYdBKVnWTKFU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078407302493:android:df4416e3c9d5a5458cecb4",
+        "android_client_info": {
+          "package_name": "com.rk.flogo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBriIPYvHt8KW5ljTnQotkIYdBKVnWTKFU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
