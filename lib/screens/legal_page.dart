@@ -11,6 +11,10 @@ class LegalPage extends StatefulWidget {
   final String effectiveDate;
   final String version;
   final List<LegalSection> sections;
+  final List<PageBadge> badges;
+  final IconData footerIcon;
+  final Color footerIconColor;
+  final String footerNote;
 
   const LegalPage({
     super.key,
@@ -20,6 +24,11 @@ class LegalPage extends StatefulWidget {
     required this.effectiveDate,
     required this.version,
     required this.sections,
+    this.badges = const [],
+    this.footerIcon = Icons.shield_outlined,
+    this.footerIconColor = AppColors.success,
+    this.footerNote = 'This application processes all data locally on your '
+        'device. No information is ever transmitted to external servers.',
   });
 
   @override
@@ -35,7 +44,7 @@ class _LegalPageState extends State<LegalPage> {
     super.initState();
     _sectionKeys = List.generate(widget.sections.length, (_) => GlobalKey());
     // Overview/Agreement (index 0) starts expanded, like the reference.
-    _expanded = List.generate(widget.sections.length, (i) => false);
+    _expanded = List.generate(widget.sections.length, (i) => i == 0);
   }
 
   void _scrollToSection(int index) {
@@ -177,11 +186,7 @@ class _LegalPageState extends State<LegalPage> {
         Wrap(
           spacing: 10,
           runSpacing: 10,
-          children: [
-            _Badge(icon: Icons.calendar_today_outlined, label: 'Effective ${widget.effectiveDate}', color: AppColors.accent),
-            _Badge(icon: Icons.verified_outlined, label: 'Version ${widget.version}', color: AppColors.success),
-            _Badge(icon: Icons.lock_outline, label: 'No data collected', color: AppColors.accent),
-          ],
+          children: widget.badges,
         ),
       ],
     );
@@ -264,12 +269,11 @@ class _LegalPageState extends State<LegalPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.shield_outlined, size: 18, color: AppColors.success),
+              Icon(widget.footerIcon, size: 18, color: widget.footerIconColor),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'This application processes all data locally on your device. '
-                  'No information is ever transmitted to external servers.',
+                  widget.footerNote,
                   style: const TextStyle(fontSize: 13, color: AppColors.text2, height: 1.5),
                 ),
               ),
@@ -281,11 +285,11 @@ class _LegalPageState extends State<LegalPage> {
   }
 }
 
-class _Badge extends StatelessWidget {
+class PageBadge extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  const _Badge({required this.icon, required this.label, required this.color});
+  const PageBadge({super.key, required this.icon, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {

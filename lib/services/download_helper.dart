@@ -18,4 +18,17 @@ class DownloadHelper {
     anchor.remove();
     Future.delayed(const Duration(seconds: 5), () => html.Url.revokeObjectUrl(url));
   }
+
+  /// Opens the user's default mail client with a pre-filled recipient
+  /// (and optional subject), via a plain mailto: anchor click — the
+  /// same "build an off-DOM anchor, click it, remove it" pattern as
+  /// downloadBytes above.
+  static void openMailto(String email, {String? subject}) {
+    final query = subject != null ? '?subject=${Uri.encodeComponent(subject)}' : '';
+    final anchor = html.AnchorElement(href: 'mailto:$email$query')
+      ..style.display = 'none';
+    html.document.body!.append(anchor);
+    anchor.click();
+    anchor.remove();
+  }
 }
