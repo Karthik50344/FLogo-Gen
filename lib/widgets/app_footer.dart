@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import '../data/contact_info.dart';
 import '../services/download_helper.dart';
 import '../theme/app_colors.dart';
-import '../screens/privacy_policy_screen.dart';
-import '../screens/terms_conditions_screen.dart';
-import '../screens/user_guide_screen.dart';
 
 class AppFooter extends StatelessWidget {
   const AppFooter({super.key});
@@ -30,7 +27,7 @@ class AppFooter extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             const Text(
-              'Flutter Logo Generator',
+              'FLogo Generator',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
             ),
           ],
@@ -50,25 +47,19 @@ class AppFooter extends StatelessWidget {
             _FooterLink(
               icon: Icons.menu_book_outlined,
               label: 'User Guide',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const UserGuideScreen()),
-              ),
+              onTap: () => Navigator.of(context).pushNamed('/user-guide'),
             ),
             const _Dot(),
             _FooterLink(
               icon: Icons.shield_outlined,
               label: 'Privacy Policy',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
-              ),
+              onTap: () => Navigator.of(context).pushNamed('/privacy-policy'),
             ),
             const _Dot(),
             _FooterLink(
               icon: Icons.gavel_outlined,
               label: 'Terms & Conditions',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
-              ),
+              onTap: () => Navigator.of(context).pushNamed('/terms'),
             ),
             const _Dot(),
             const _FooterStatus(),

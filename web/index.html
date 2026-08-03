@@ -3,14 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Flutter Logo Generator — upload a logo, get platform-perfect Flutter icon assets.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0A0D14">
+
+  <!--
+    NOTE ON DOMAIN: replace https://flogo-gen.web.app/ below with your
+    real production domain everywhere it appears (canonical, og:url,
+    twitter:image, and the JSON-LD block) if this isn't it. Keep it in
+    sync with web/robots.txt and web/sitemap.xml too.
+  -->
+
+  <!-- Primary SEO -->
+  <title>Flutter Logo Generator — Free Flutter App Icon Generator</title>
+  <meta name="description" content="Upload one logo and generate platform-perfect Flutter app icons for Android, iOS, Web, Windows, macOS, and Linux — sized, named, and folder-structured exactly as Flutter expects. Runs entirely in your browser, nothing is uploaded.">
+  <meta name="keywords" content="flutter icon generator, flutter app icon, android adaptive icon generator, ios app icon generator, flutter launcher icon, app icon generator, flutter logo generator">
+  <meta name="author" content="Flutter Logo Generator">
+  <link rel="canonical" href="https://flogo-gen.web.app/">
+
+  <!-- Open Graph (Facebook, LinkedIn, Discord, Slack previews, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Flutter Logo Generator — Free Flutter App Icon Generator">
+  <meta property="og:description" content="Upload one logo, get every platform-specific Flutter app icon you need — Android, iOS, Web, Windows, macOS, Linux. 100% client-side, nothing ever uploaded.">
+  <meta property="og:url" content="https://flogo-gen.web.app/">
+  <meta property="og:site_name" content="Flutter Logo Generator">
+  <meta property="og:image" content="https://flogo-gen.web.app/icons/Icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Flutter Logo Generator — Free Flutter App Icon Generator">
+  <meta name="twitter:description" content="Upload one logo, get every platform-specific Flutter app icon you need. 100% client-side, nothing ever uploaded.">
+  <meta name="twitter:image" content="https://flogo-gen.web.app/icons/Icon-512.png">
 
   <!-- Ads -->
   <meta name="google-adsense-account" content="ca-pub-7777887209744733">
 
-  <title>Flutter Logo Generator</title>
+  <!-- Structured data: helps search engines show a richer result -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Flutter Logo Generator",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any (runs in browser)",
+    "description": "Upload one logo and generate platform-perfect Flutter app icons for Android, iOS, Web, Windows, macOS, and Linux — entirely client-side.",
+    "url": "https://flogo-gen.web.app/",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="favicon.png"/>
 
@@ -24,6 +70,26 @@
 </head>
 <body>
   <div id="loading">Loading…</div>
+
+  <!--
+    Fallback content for crawlers/clients that don't execute JavaScript
+    (some bots, link-preview scrapers, accessibility tools). Flutter Web
+    renders the real UI into <flutter-view> once flutter_bootstrap.js
+    runs, so this never shows in a normal browser — it exists purely so
+    something readable exists in the raw HTML response.
+  -->
+  <noscript>
+    <div style="max-width:640px;margin:80px auto;padding:24px;color:#E8EAF6;font-family:sans-serif;line-height:1.6;">
+      <h1>Flutter Logo Generator</h1>
+      <p>Upload one logo and generate platform-perfect Flutter app icons for
+      Android, iOS, Web, Windows, macOS, and Linux — sized, named, and
+      folder-structured exactly as Flutter expects. Everything runs in
+      your browser; nothing is ever uploaded to a server.</p>
+      <p>This app requires JavaScript to run. Please enable JavaScript in
+      your browser to use it.</p>
+    </div>
+  </noscript>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# Flutter Logo Generator — Developer Guide
+# FLogo Generator — Developer Guide
 
 This document explains how the app is put together: architecture,
 state management, the image-processing pipeline, and how to extend
@@ -226,6 +226,118 @@ a plain `mailto:` link, built and clicked the same off-DOM-anchor way
 `downloadBytes()` triggers the ZIP download. **`kContactEmail` ships
 with a placeholder value (`your-email@example.com`) — replace it
 with a real address before shipping.**
+
+## SEO
+
+Two independent things had to change for this to be even remotely
+SEO-friendly — metadata alone doesn't help if the pages it describes
+aren't reachable by URL:
+
+### 1. Real, path-based routes
+
+`main.dart` now calls `usePathUrlStrategy()` (from
+`flutter_web_plugins`, ships with the SDK — no `pub.dev` fetch
+needed) before `runApp`, and `MaterialApp` uses a `routes:` map
+(`/`, `/privacy-policy`, `/terms`, `/user-guide`) instead of
+`home:`. Without `usePathUrlStrategy()`, Flutter Web defaults to
+hash-based URLs (`/#/privacy-policy`), which search engines
+effectively don't index as distinct pages. `widgets/app_footer.dart`
+navigates with `Navigator.pushNamed('/user-guide')` etc. instead of
+`Navigator.push(MaterialPageRoute(...))`, specifically so the
+browser's address bar actually updates.
+
+**If you add a new page, update all four of these together:**
+`main.dart`'s `routes` map, `kRouteTitles` (same file),
+`widgets/app_footer.dart`'s links, and `web/sitemap.xml`.
+
+### 2. Per-route browser tab titles
+
+`main.dart`'s `_TitleRouteObserver` (a `NavigatorObserver`) sets
+`document.title` on every push/pop/replace, keyed off
+`kRouteTitles`. This is deliberately centralized rather than done in
+each screen's `initState` — a screen's `State` object isn't
+recreated on `Navigator.pop()`, so a per-screen approach fails to
+reset the title when the user hits "back."
+
+### 3. `<head>` metadata (`web/index.html`)
+
+Description, keywords, canonical URL, Open Graph tags (for
+Facebook/LinkedIn/Discord/Slack link previews), a Twitter Card, a
+`SoftwareApplication` JSON-LD block, and a `<noscript>` fallback for
+crawlers/scrapers that don't execute JavaScript. **The domain used
+throughout (`flogo-gen.web.app`) is a placeholder based on the
+screenshots shared during development — find-and-replace it with
+your real production domain** in `index.html`, `robots.txt`, and
+`sitemap.xml` if it differs.
+
+### 4. Hosting rewrite rule — required, not optional
+
+Path-based routing only works if your host serves `index.html` for
+*every* path (Flutter's router then reads the URL client-side and
+picks the right route). Without this, a fresh visit to
+`/privacy-policy` (a shared link, a bookmark, a search-result click)
+404s at the server before Flutter ever loads.
+
+- **Firebase Hosting** (your screenshots showed `flogo-gen.web.app`,
+  which is a Firebase Hosting domain): `firebase.json` at the repo
+  root already has the required `rewrites: [{ "source": "**",
+  "destination": "/index.html" }]` rule. Deploy with `firebase
+  deploy` after `flutter build web`.
+- **Netlify**: add a `_redirects` file to `web/` (copied into
+  `build/web/` on build) containing `/*  /index.html  200`.
+- **Vercel**: add a `vercel.json` with a catch-all rewrite to
+  `/index.html`.
+- **Nginx**: `try_files $uri $uri/ /index.html;` in the relevant
+  `location /` block.
+- **Apache**: an `.htaccess` with `FallbackResource /index.html` (or
+  equivalent `mod_rewrite` rules).
+
+If you're not sure which of these applies, check `robots.txt`/visit
+`/privacy-policy` directly (not via an in-app link) after deploying
+— a 404 there means the rewrite rule is missing or misconfigured.
+
+### 5. Renderer choice — the one item above doesn't fix on its own
+
+Everything above (routing, `<head>` metadata, the rewrite rule)
+makes pages *discoverable and linkable*. It does not by itself make
+their *body content* crawlable, and this is the part most guides
+skip:
+
+- **CanvasKit** (Flutter Web's current default) paints the entire UI
+  — including all text — onto a `<canvas>`/WebGL surface. Even when
+  a crawler executes the JavaScript, there are no real DOM text
+  nodes to extract; the rendered pixels live in the GPU's
+  framebuffer, not the DOM. Googlebot's HTML extractor reads DOM
+  nodes, so CanvasKit output is effectively invisible to
+  text-based indexing regardless of how good your meta tags are.
+- **The HTML renderer** paints text and basic widgets as real DOM
+  elements (with CSS/Canvas 2D/SVG for the rest), so crawlers can
+  read actual text nodes — meaningfully better for SEO and
+  accessibility, at some cost to visual/animation fidelity and a
+  different performance profile than CanvasKit.
+
+**If ranking on the actual page content (not just the title/
+description shown in search results) matters, switch the renderer
+for this app.** How you do that has changed across Flutter
+versions, so check what your installed SDK supports:
+
+- Try `flutter build web --web-renderer html` first — the flag has
+  existed for a long time and may still work on your version.
+- If it doesn't, configure it in the generated bootstrap instead:
+  Flutter Web's `index.html` loads via `flutter_bootstrap.js`, which
+  calls `_flutter.loader.load(...)`. You can pass
+  `config: { renderer: 'html' }` there (see "Customizing web app
+  initialization" in the official Flutter docs for the exact current
+  syntax, since this file is regenerated by `flutter build web` and
+  isn't something to hand-edit permanently).
+
+Even with the HTML renderer, Flutter's widget tree doesn't
+automatically produce semantic HTML (headings, landmarks, etc.) —
+it's still `<div>`-heavy unless you deliberately use `Semantics`
+widgets. The HTML renderer's real win here is simply that your
+copy becomes actual, indexable text instead of pixels; it's not a
+substitute for semantic markup if this app ever needs deeper
+on-page SEO than "the page is indexed at all."
 
 ## Adding a new output platform
 
