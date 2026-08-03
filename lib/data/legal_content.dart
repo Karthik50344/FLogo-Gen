@@ -15,7 +15,7 @@ class LegalBadge {
 /// actual policy text if it differs.
 const List<LegalSection> kPrivacySections = [
   LegalSection('Overview', [
-    'Flutter Logo Generator ("the App") is a fully offline, client-side '
+    'FLogo Generator ("the App") is a fully offline, client-side '
         'tool. It accepts an image file from your device, processes it '
         'locally to produce Flutter-compatible icon assets, and packages '
         'them into a ZIP archive that is saved directly to your device.',
@@ -75,13 +75,13 @@ const List<LegalSection> kPrivacySections = [
 /// Content for the Terms & Conditions screen.
 const List<LegalSection> kTermsSections = [
   LegalSection('Agreement', [
-    'By using Flutter Logo Generator you agree to these terms. They '
+    'By using FLogo Generator you agree to these terms. They '
         'cover acceptable use, intellectual property, output quality, and '
         'limitations of liability. If you do not agree, please do not use '
         'the App.',
   ]),
   LegalSection('1. Description of the App', [
-    'Flutter Logo Generator is a free, offline, client-side tool that '
+    'FLogo Generator is a free, offline, client-side tool that '
         'converts a single uploaded logo into a set of platform-specific '
         'icon assets for Flutter projects (Android, iOS, Web, Linux, '
         'Windows, and macOS).',

@@ -15,7 +15,7 @@ class TermsConditionsScreen extends StatelessWidget {
     return const LegalPage(
       title: 'Terms & Conditions',
       heroIcon: Icons.gavel_outlined,
-      subtitle: 'By using Flutter Logo Generator you agree to these terms. '
+      subtitle: 'By using FLogo Generator you agree to these terms. '
           'They cover acceptable use, intellectual property, output quality, '
           'and limitations of liability.',
       effectiveDate: _effectiveDate,

@@ -45,6 +45,12 @@ class AppFooter extends StatelessWidget {
           runSpacing: 8,
           children: [
             _FooterLink(
+              icon: Icons.auto_stories_outlined,
+              label: 'Guides & Articles',
+              onTap: () => Navigator.of(context).pushNamed('/guides'),
+            ),
+            const _Dot(),
+            _FooterLink(
               icon: Icons.menu_book_outlined,
               label: 'User Guide',
               onTap: () => Navigator.of(context).pushNamed('/user-guide'),

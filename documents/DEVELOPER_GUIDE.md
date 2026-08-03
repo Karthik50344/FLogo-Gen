@@ -1,4 +1,4 @@
-# FLogo Generator — Developer Guide
+# Flutter Logo Generator — Developer Guide
 
 This document explains how the app is put together: architecture,
 state management, the image-processing pipeline, and how to extend
@@ -215,6 +215,49 @@ title, hero icon, subtitle, `PageBadge` list, `LegalSection` list
 then a `ChangelogScreen` following the exact shape of
 `user_guide_screen.dart`, and add a `_FooterLink` entry for it in
 `widgets/app_footer.dart`.
+
+### Guides & Articles (long-form content)
+
+`data/article_model.dart` defines the `Article`/`ArticleSection`
+shape; `data/articles_content.dart` holds the actual 12 articles
+(exported alongside the model via `export 'article_model.dart';`, so
+anything importing `articles_content.dart` gets both). Two screens
+render them:
+
+- `screens/guides_list_screen.dart` — the `/guides` index, listing
+  every article as a card.
+- `screens/article_screen.dart` — renders one `Article`'s full
+  content (heading + paragraphs per section).
+
+Article routes are **not** hardcoded one-by-one in `main.dart`'s
+`routes` map — `onGenerateRoute` matches any `/guides/<slug>` path,
+looks the slug up in `kArticles`, and builds an `ArticleScreen` for
+it (falling back to Home for an unknown slug). `_TitleRouteObserver`
+does the same slug lookup to set the browser tab title. **To add a
+13th article, you only need to add one `Article` entry to
+`kArticles`** — routing, titles, and the guides index all pick it up
+automatically. You do still need to add its URL to
+`web/sitemap.xml` by hand, since that file is static.
+
+### Homepage content sections
+
+Four widgets add real prose/content to the landing page, inserted
+between the Generate button and the footer in `home_screen.dart`
+(width-capped to 1000px for readability, unlike the full-width
+generator UI above them):
+
+- `widgets/how_it_works_section.dart` — the 4-step process, in prose.
+- `widgets/why_use_section.dart` — a benefits/value-proposition
+  section.
+- `widgets/guides_teaser_section.dart` — the first 3 articles from
+  `kArticles`, linking to `/guides`.
+- `widgets/faq_section.dart` — an accordion over `data/faq_content.dart`'s
+  `kFaqs` list.
+
+This content was added specifically to satisfy ad-network content
+requirements (e.g. AdSense expects a site to have substantive,
+original text content beyond just a tool UI) — if you trim any of
+it, keep that requirement in mind.
 
 ### Contact Us (footer)
 

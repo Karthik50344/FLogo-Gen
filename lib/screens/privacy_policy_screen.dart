@@ -15,7 +15,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
     return const LegalPage(
       title: 'Privacy Policy',
       heroIcon: Icons.privacy_tip_outlined,
-      subtitle: 'Flutter Logo Generator processes all images locally on your '
+      subtitle: 'FLogo Generator processes all images locally on your '
           'device. This policy explains exactly what data is handled and how.',
       effectiveDate: _effectiveDate,
       version: _version,

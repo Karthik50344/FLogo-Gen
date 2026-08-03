@@ -4,21 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 
+import 'data/articles_content.dart';
 import 'models/app_state.dart';
+import 'screens/article_screen.dart';
+import 'screens/guides_list_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/privacy_policy_screen.dart';
 import 'screens/terms_conditions_screen.dart';
 import 'screens/user_guide_screen.dart';
 import 'theme/app_colors.dart';
 
-/// Route name → human-readable page title, used for both the <title> tag
-/// (SEO/browser tab) and, if you later add analytics, page-view tracking.
-/// Keep in sync with the `routes` map below.
+/// Route name → human-readable page title for every *static* route, used
+/// for the <title> tag (SEO/browser tab). Article routes (/guides/<slug>)
+/// aren't listed here — their title is looked up from kArticles instead,
+/// see _TitleRouteObserver below. Keep this in sync with the `routes` map.
 const Map<String, String> kRouteTitles = {
   '/': 'FLogo Generator — Free Flutter App Icon Generator',
-  '/privacy-policy': 'Privacy Policy · Flutter Logo Generator',
-  '/terms': 'Terms & Conditions · Flutter Logo Generator',
-  '/user-guide': 'User Guide · Flutter Logo Generator',
+  '/privacy-policy': 'Privacy Policy · FLogo Generator',
+  '/terms': 'Terms & Conditions · FLogo Generator',
+  '/user-guide': 'User Guide · FLogo Generator',
+  '/guides': 'Guides & Articles · FLogo Generator',
 };
 
 /// Keeps `document.title` in sync with whichever route is on top of the
@@ -27,8 +32,19 @@ const Map<String, String> kRouteTitles = {
 class _TitleRouteObserver extends NavigatorObserver {
   void _apply(Route<dynamic>? route) {
     final name = route?.settings.name;
-    if (name != null && kRouteTitles.containsKey(name)) {
+    if (name == null) return;
+
+    if (kRouteTitles.containsKey(name)) {
       html.document.title = kRouteTitles[name]!;
+      return;
+    }
+
+    if (name.startsWith('/guides/')) {
+      final slug = name.substring('/guides/'.length);
+      final matches = kArticles.where((a) => a.slug == slug);
+      if (matches.isNotEmpty) {
+        html.document.title = '${matches.first.title} · FLogo Generator';
+      }
     }
   }
 
@@ -83,6 +99,27 @@ class FlutterLogoGeneratorApp extends StatelessWidget {
           '/privacy-policy': (context) => const PrivacyPolicyScreen(),
           '/terms': (context) => const TermsConditionsScreen(),
           '/user-guide': (context) => const UserGuideScreen(),
+          '/guides': (context) => const GuidesListScreen(),
+        },
+        // Dynamic /guides/<slug> article routes — one Article, one URL,
+        // without hand-writing a named route per article above.
+        onGenerateRoute: (settings) {
+          final name = settings.name ?? '';
+          if (name.startsWith('/guides/')) {
+            final slug = name.substring('/guides/'.length);
+            final matches = kArticles.where((a) => a.slug == slug);
+            if (matches.isNotEmpty) {
+              return MaterialPageRoute(
+                settings: settings,
+                builder: (context) => ArticleScreen(article: matches.first),
+              );
+            }
+          }
+          // Unknown route: fall back to Home rather than a blank/error page.
+          return MaterialPageRoute(
+            settings: const RouteSettings(name: '/'),
+            builder: (context) => const HomeScreen(),
+          );
         },
       ),
     );

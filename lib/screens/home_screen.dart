@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_footer.dart';
 import '../widgets/app_header.dart';
+import '../widgets/faq_section.dart';
 import '../widgets/generate_button.dart';
+import '../widgets/guides_teaser_section.dart';
+import '../widgets/how_it_works_section.dart';
 import '../widgets/loader_overlay.dart';
 import '../widgets/options_card.dart';
 import '../widgets/output_tree_card.dart';
 import '../widgets/platform_grid_card.dart';
 import '../widgets/theme_card.dart';
 import '../widgets/upload_card.dart';
+import '../widgets/why_use_section.dart';
 import 'grid_background.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -104,6 +108,26 @@ class HomeScreen extends StatelessWidget {
                         const OutputTreeCard(),
                         const SizedBox(height: 28),
                         const GenerateButton(),
+                        const SizedBox(height: 80),
+                        // Long-form landing-page content below the tool
+                        // itself — capped to a readable width even though
+                        // the generator UI above uses the full screen.
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 1000),
+                            child: const Column(
+                              children: [
+                                HowItWorksSection(),
+                                SizedBox(height: 64),
+                                WhyUseSection(),
+                                SizedBox(height: 64),
+                                GuidesTeaserSection(),
+                                SizedBox(height: 64),
+                                FaqSection(),
+                              ],
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 56),
                         const AppFooter(),
                       ],

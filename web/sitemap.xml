@@ -11,6 +11,71 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://flogo-gen.web.app/guides</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/flutter-app-icon-sizes-guide</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/android-adaptive-icons-explained</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/ios-app-icon-requirements</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/designing-a-logo-that-scales</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/pwa-maskable-icons-explained</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/windows-ico-files-explained</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/macos-app-icon-guidelines</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/android-notification-icons-monochrome</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/background-removal-for-logos</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/flutter-launcher-icons-manual-vs-automated</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/history-of-the-app-icon</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://flogo-gen.web.app/guides/common-app-icon-mistakes</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://flogo-gen.web.app/privacy-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
