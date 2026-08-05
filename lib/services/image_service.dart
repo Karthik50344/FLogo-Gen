@@ -13,9 +13,11 @@ class ImageService {
   static img.Image _blankCanvas(int size, {Color? bgColor}) {
     final canvas = img.Image(width: size, height: size, numChannels: 4);
     if (bgColor != null) {
+      // bgColor.alpha (not a hardcoded 255) — otherwise a transparent
+      // background selection would silently render fully opaque.
       img.fill(
         canvas,
-        color: img.ColorRgba8(bgColor.red, bgColor.green, bgColor.blue, 255),
+        color: img.ColorRgba8(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha),
       );
     } else {
       img.fill(canvas, color: img.ColorRgba8(0, 0, 0, 0));
@@ -25,12 +27,12 @@ class ImageService {
 
   /// Equivalent of `resizeImage(img, size, opts)`.
   static img.Image resizeImage(
-    img.Image src,
-    int size, {
-    Color? bgColor,
-    bool maskable = false,
-    bool rounded = false,
-  }) {
+      img.Image src,
+      int size, {
+        Color? bgColor,
+        bool maskable = false,
+        bool rounded = false,
+      }) {
     if (maskable) {
       final canvas = _blankCanvas(size, bgColor: bgColor ?? const Color(0xFFFFFFFF));
       final safeSize = (size * 0.8).round();
@@ -125,11 +127,11 @@ class ImageService {
 
   /// Equivalent of `generateNotificationIcon(img, size, bgColor, fgColor)`.
   static img.Image generateNotificationIcon(
-    img.Image src,
-    int size,
-    Color bgColor,
-    Color fgColor,
-  ) {
+      img.Image src,
+      int size,
+      Color bgColor,
+      Color fgColor,
+      ) {
     final canvas = _blankCanvas(size, bgColor: bgColor);
 
     final temp = img.copyResize(
@@ -142,7 +144,8 @@ class ImageService {
       for (var x = 0; x < size; x++) {
         final p = temp.getPixel(x, y);
         if (p.a > 10) {
-          temp.setPixelRgba(x, y, fgColor.red, fgColor.green, fgColor.blue, p.a.toInt());
+          final combinedAlpha = (p.a * (fgColor.alpha / 255)).round();
+          temp.setPixelRgba(x, y, fgColor.red, fgColor.green, fgColor.blue, combinedAlpha);
         }
       }
     }

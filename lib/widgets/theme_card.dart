@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/app_state.dart';
 import '../theme/app_colors.dart';
+import 'checkerboard_swatch.dart';
 import 'color_picker_dialog.dart';
 import 'section_card.dart';
 
@@ -196,10 +197,11 @@ class _ColorField extends StatelessWidget {
 
   const _ColorField({required this.label, required this.color, required this.onChanged});
 
-  String _hex(Color c) => '#${c.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+  String _hex(Color c) => '#${c.value.toRadixString(16).padLeft(8, '0').substring(2)}'.toUpperCase();
 
   @override
   Widget build(BuildContext context) {
+    final opacityPct = (color.alpha / 255 * 100).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -219,16 +221,12 @@ class _ColorField extends StatelessWidget {
                   final picked = await ColorPickerDialog.show(context, color);
                   if (picked != null) onChanged(picked);
                 },
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
-                ),
+                child: CheckerboardSwatch(color: color, size: 28),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  _hex(color),
+                  opacityPct == 100 ? _hex(color) : '${_hex(color)} · $opacityPct%',
                   style: const TextStyle(fontSize: 13, color: AppColors.text, fontFamily: 'JetBrainsMono'),
                 ),
               ),

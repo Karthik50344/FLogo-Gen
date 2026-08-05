@@ -101,41 +101,96 @@ always imports it as `img.Image`).
 All of the above are pure functions (no I/O), which makes them easy
 to unit test in isolation from ZIP building / UI state.
 
-## ZIP assembly (`generate_controller.dart`)
+### Color picker: manual input + transparency
 
-`GenerateController.generate(AppState state)` is the single entry
-point the **Generate & Download ZIP** button calls. Flow:
+`widgets/color_picker_dialog.dart`'s `ColorPickerDialog` supports HSV
+sliders, manual hex (`#RRGGBB`) and R/G/B numeric input, and a
+separate Opacity slider (with quick Transparent/Opaque buttons) —
+hex/RGB edits never touch alpha, so typing a hex value can't
+accidentally reset transparency back to opaque. `widgets/
+checkerboard_swatch.dart` renders the standard transparency
+checkerboard behind every swatch (the field preview in
+`_ColorField` and the picker's own preview bar) so a semi-transparent
+or fully transparent selection is visually obvious rather than
+looking like an unset/black swatch.
 
-1. Validate: an image is uploaded and at least one platform is
-   selected.
-2. Build the ordered list of loader step labels (used to drive the
-   progress overlay) based on which platforms/options are active.
-3. Decode the uploaded image, resize it to a 1024×1024 **working
-   copy** (`baseImg`) — every per-platform/per-size asset is derived
-   from this one working copy, not from the raw upload, so behavior
-   is consistent regardless of the source image's original
-   dimensions.
-4. If background removal is on, apply it to `baseImg` once (not
-   per-output-file) so every downstream asset is consistent.
-5. For each selected platform, call the matching `_addX(archive,
-   baseImg, ...)` method (`_addAndroid`, `_addIos`, `_addWeb`,
-   `_addLinux`, `_addWindows`, `_addMacos`). Each one writes its
-   files directly into a shared `Archive` via `_addFile`.
-6. If notification icons are enabled, `_addNotificationIcons` writes
-   the light/dark variants (and, if Android is selected, the
-   per-density `drawable-*/ic_notification.png` set).
-7. Add a generated `README.md` (`_generateReadme`) tailored to the
-   exact platforms/options chosen.
-8. Encode the archive with `ZipEncoder()`, convert to `Uint8List`,
-   and hand off to `DownloadHelper.downloadBytes`.
-9. Reset the loader and clear the uploaded image on success.
+This surfaced a real bug worth knowing about: `_blankCanvas` in
+`image_service.dart` used to hardcode the fill alpha to `255`
+regardless of what `bgColor` actually was, so picking a transparent
+notification-icon background silently produced an opaque PNG. It now
+uses `bgColor.alpha`. `generateNotificationIcon` similarly used to
+ignore `fgColor`'s own alpha (only preserving the source pixel's
+alpha) — it now multiplies the two together, so a semi-transparent
+icon color is respected too. If you add other user-color-driven
+image operations, make sure they read `.alpha` from the `Color`
+rather than assuming full opacity.
 
-Progress reporting: `state.setStep(i)` is awaited between phases —
-it updates `loaderText`/`currentStepIndex` and does a tiny
-`Future.delayed` so the UI actually gets a chance to repaint between
-CPU-heavy steps (Dart is single-threaded here; there's no isolate
-work happening, so without a yield the browser tab would appear to
-hang during generation).
+## ZIP assembly and background processing
+
+This is the part of the app most worth understanding before you
+touch it, because it's split across three files for a specific
+reason: **all the actual resizing/compositing/ZIP-encoding work runs
+on a background isolate** (a Web Worker under Flutter Web), not on
+the UI thread, so the loader's spinner and the rest of the UI stay
+responsive no matter how large the image or how many platforms are
+selected.
+
+- **`generate_job.dart`** — `GenerateJob`, a plain, isolate-safe
+  snapshot of everything the worker needs (image bytes, selected
+  platforms, option flags, theme, and colors as raw ARGB ints — no
+  `Color`, no `AppState`, nothing Flutter-widget-shaped). Isolate
+  messages are copied across the isolate boundary; keeping this to
+  primitives + `Uint8List`/`List`/`Map` avoids any ambiguity about
+  what's safe to send. `GenerateJob.stepLabels` computes the ordered
+  loader step list once, so the UI (before the job is sent) and the
+  worker (as it reports progress indices) agree on what step N means.
+- **`generate_worker.dart`** — the actual "what goes in the ZIP"
+  logic (`buildPlatformAssets`, `addNotificationIcons`,
+  `generateReadme`, and the platform-specific `_addAndroid`/`_addIos`/
+  etc. functions), plus `generateWorkerEntry(SendPort)`, the isolate
+  entry point. These are plain top-level functions (not methods on a
+  class) operating on `GenerateJob` instead of `AppState`, so they
+  have zero dependency on Provider/BuildContext/widgets — required,
+  since none of that exists on a worker isolate.
+- **`generate_controller.dart`** — `GenerateController.generate()` is
+  still the single entry point the **Generate & Download ZIP** button
+  calls, but it's now a thin orchestrator:
+    1. Validates an image is uploaded and at least one platform is
+       selected, then builds a `GenerateJob` snapshot of the current
+       `AppState`.
+    2. Calls `_runInBackgroundIsolate`, which spawns
+       `generateWorkerEntry` via `Isolate.spawn`, does the standard
+       Dart handshake (worker sends its `SendPort` back first), sends
+       the job as a `Map` (`job.toMap()`), then listens for
+       `{'type': 'step'|'done'|'error', ...}` messages — relaying
+       `'step'` messages into `state.setStep()` as they arrive, which
+       is what keeps the loader's step list advancing live while the
+       worker keeps computing in parallel. The isolate is killed once a
+       result (or error) comes back.
+    3. If spawning the isolate throws for any reason,
+       `_runOnMainIsolate` runs the *exact same* `generate_worker.dart`
+       functions synchronously on the calling isolate instead — same
+       output, but the UI will visibly pause during the heavy steps
+       the way the whole app used to before this split. This exists so
+       the app still works (just without the performance win) on any
+       environment where `Isolate.spawn` unexpectedly isn't available,
+       rather than crashing outright.
+    4. Once ZIP bytes come back (from either path), triggers the
+       download, resets the loader, and calls
+       `state.resetAfterGenerate()`.
+
+**Why this needed `pubspec.yaml`'s Dart SDK bumped to `>=3.7.0`:**
+`Isolate.spawn`/`Isolate.run` only reliably map to real Web Workers
+on Flutter Web from Dart 3.7 onward; on older SDKs they either don't
+work on web at all or silently run everything on the main thread
+anyway (no crash, just no speedup — which is exactly the failure
+mode `_runOnMainIsolate` exists to also handle gracefully).
+
+**If you add a new platform or step**, add it to
+`generate_worker.dart` (both the `_runJob` sequence and
+`buildPlatformAssets`/etc.) — `generate_controller.dart`'s fallback
+path calls the same shared functions, so you only implement each
+step once regardless of which isolate runs it.
 
 ## Data-driven size tables (`platform_specs.dart`)
 
@@ -416,6 +471,21 @@ reports.
 
 ## Known gaps / things to double-check
 
+- **Background isolate generation (highest priority to verify)**:
+  `generate_worker.dart`/`generate_controller.dart`'s
+  `Isolate.spawn`-based architecture was written against confirmed
+  Dart 3.7+ Web isolate support but has **not been compile-tested or
+  run** (no `pub.dev` access or Flutter SDK in the environment this
+  was authored in). Test it first: upload an image, select every
+  platform, click Generate, and confirm (a) the loader's spinner
+  keeps animating smoothly throughout — the whole point of this
+  architecture — and (b) the resulting ZIP is byte-identical in
+  structure to what the old synchronous version produced. If
+  `Isolate.spawn` throws on your target SDK/embedder,
+  `_runOnMainIsolate` should silently take over (slower, but
+  correct) — verify that path too by temporarily forcing it (e.g.
+  make `_runInBackgroundIsolate` throw immediately) if the primary
+  path doesn't trigger it naturally in your testing.
 - **Contact email**: `data/contact_info.dart`'s `kContactEmail` is
   still the placeholder `your-email@example.com` — replace it before
   shipping, or the footer's Contact Us link will mail nowhere.

@@ -54,6 +54,31 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Called after a successful generate-and-download — resets everything
+  /// back to its default value (not just the uploaded image), so the next
+  /// run starts from a clean slate: platforms deselected, options back to
+  /// their defaults, theme/colors reset.
+  void resetAfterGenerate() {
+    imageBytes = null;
+    fileName = null;
+    fileSize = null;
+    mimeType = null;
+
+    platforms.clear();
+
+    removeBg = false;
+    genNotif = true;
+    genAdaptive = true;
+
+    theme = 'both';
+    lightBg = const Color(0xFFFFFFFF);
+    lightFg = const Color(0xFF1A1A2E);
+    darkBg = const Color(0xFF1A1A2E);
+    darkFg = const Color(0xFFFFFFFF);
+
+    notifyListeners();
+  }
+
   void togglePlatform(String id) {
     if (platforms.contains(id)) {
       platforms.remove(id);
