@@ -57,6 +57,18 @@ class AppFooter extends StatelessWidget {
             ),
             const _Dot(),
             _FooterLink(
+              icon: Icons.info_outline,
+              label: 'About',
+              onTap: () => Navigator.of(context).pushNamed('/about'),
+            ),
+            const _Dot(),
+            _FooterLink(
+              icon: Icons.mail_outline,
+              label: 'Contact',
+              onTap: () => Navigator.of(context).pushNamed('/contact'),
+            ),
+            const _Dot(),
+            _FooterLink(
               icon: Icons.shield_outlined,
               label: 'Privacy Policy',
               onTap: () => Navigator.of(context).pushNamed('/privacy-policy'),
@@ -141,7 +153,7 @@ class _FooterStatus extends StatelessWidget {
         Icon(Icons.lock_outline, size: 14, color: AppColors.success),
         SizedBox(width: 6),
         Text(
-          'No data collected',
+          'Your logo never leaves your device',
           style: TextStyle(fontSize: 12.5, color: AppColors.success, fontWeight: FontWeight.w500),
         ),
       ],

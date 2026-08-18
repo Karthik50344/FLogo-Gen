@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/articles_content.dart';
 import '../theme/app_colors.dart';
+import '../widgets/site_nav_bar.dart';
 
 class GuidesListScreen extends StatelessWidget {
   const GuidesListScreen({super.key});
@@ -13,7 +14,7 @@ class GuidesListScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(context),
+            const SiteNavBar(showBack: true),
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -67,28 +68,6 @@ class GuidesListScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border)),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          ),
-          const SizedBox(width: 4),
-          const Text(
-            'Guides & Articles',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.text),
-          ),
-        ],
       ),
     );
   }

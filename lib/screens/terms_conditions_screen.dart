@@ -7,8 +7,8 @@ import 'legal_page.dart';
 class TermsConditionsScreen extends StatelessWidget {
   const TermsConditionsScreen({super.key});
 
-  static const _effectiveDate = 'April 1, 2025';
-  static const _version = '1.0';
+  static const _effectiveDate = 'August 18, 2026';
+  static const _version = '1.1';
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class TermsConditionsScreen extends StatelessWidget {
       badges: [
         PageBadge(icon: Icons.calendar_today_outlined, label: 'Effective $_effectiveDate', color: AppColors.accent),
         PageBadge(icon: Icons.verified_outlined, label: 'Version $_version', color: AppColors.success),
-        PageBadge(icon: Icons.lock_outline, label: 'No data collected', color: AppColors.accent),
+        PageBadge(icon: Icons.lock_outline, label: 'Logo processed on-device', color: AppColors.accent),
       ],
     );
   }

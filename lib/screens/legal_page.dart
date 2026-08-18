@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../data/legal_content.dart';
 import '../theme/app_colors.dart';
+import '../widgets/site_nav_bar.dart';
 
 class LegalPage extends StatefulWidget {
   final String title;
@@ -69,7 +69,7 @@ class _LegalPageState extends State<LegalPage> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(context),
+            const SiteNavBar(showBack: true),
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -104,44 +104,6 @@ class _LegalPageState extends State<LegalPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border)),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              widget.title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppColors.text,
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Copy link',
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: widget.title));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Copied')),
-              );
-            },
-            icon: const Icon(Icons.copy_outlined, color: AppColors.text2, size: 20),
-          ),
-        ],
       ),
     );
   }

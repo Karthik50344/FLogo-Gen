@@ -9,8 +9,21 @@
   <!--
     NOTE ON DOMAIN: replace https://flogo-gen.web.app/ below with your
     real production domain everywhere it appears (canonical, og:url,
-    twitter:image, and the JSON-LD block) if this isn't it. Keep it in
+    twitter:image, and the JSON-LD blocks) if this isn't it. Keep it in
     sync with web/robots.txt and web/sitemap.xml too.
+
+    NOTE ON PER-ROUTE METADATA: this file supplies the metadata for the
+    homepage and for the very first paint of any route (crawlers that
+    don't execute JS see this). Once the Flutter app boots, lib/main.dart's
+    _SeoRouteObserver rewrites <title>, the description meta tag, the
+    canonical link, and the OG tags to match whichever route the user is
+    actually on (see kRouteSeo in lib/main.dart) — keep the two in sync
+    when adding a page.
+
+    NOTE ON THE FAQPage JSON-LD BELOW: it's generated from
+    lib/data/faq_content.dart's kFaqs list (same questions and answers
+    shown in the homepage FAQ section) so it always matches the visible
+    content. If you edit kFaqs, regenerate this block to match.
   -->
 
   <!-- Primary SEO -->
@@ -42,26 +55,197 @@
 
   <base href="$FLUTTER_BASE_HREF">
 
-  <!-- Structured data: helps search engines show a richer result -->
+  <!-- Structured data: helps search engines show a richer result.
+       Three separate blocks, each describing a different, real facet of
+       this page — the software product itself, the site as a whole, and
+       the FAQ content that's actually visible on the homepage. -->
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "FLogo Generator",
-    "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Any (runs in browser)",
-    "description": "Upload one logo and generate platform-perfect Flutter app icons for Android, iOS, Web, Windows, macOS, and Linux — entirely client-side.",
-    "url": "https://flogo-gen.web.app/",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "FLogo Generator",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any (runs in browser)",
+      "description": "Upload one logo and generate platform-perfect Flutter app icons for Android, iOS, Web, Windows, macOS, and Linux — entirely client-side.",
+      "url": "https://flogo-gen.web.app/",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
     }
-  }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "FLogo Generator",
+      "url": "https://flogo-gen.web.app/",
+      "description": "Free browser-based Flutter app icon generator for Android, iOS, Web, Windows, macOS, and Linux."
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://flogo-gen.web.app/"
+        }
+      ]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is FLogo Generator really free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. There is no account, no paywall, and no limit on how many times you can generate a ZIP. The tool runs entirely in your browser, so there is no server cost tied to how much you use it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does my logo get uploaded anywhere?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Every step — decoding, resizing, background removal, ZIP packaging — happens locally in your browser tab using client-side JavaScript/WebAssembly. Your image is never sent to a server. See the Privacy Policy for full details."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What image format should I upload?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "PNG with a transparent or solid background works best, ideally at least 1024×1024 pixels. SVG, JPG, and WEBP are also accepted, but a large, clean PNG gives the sharpest results across every generated size."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why do I need different icon sizes for each platform?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Android, iOS, Web, Windows, macOS, and Linux each render app icons at different resolutions and in different formats — launcher icons, adaptive icon layers, favicons, .ico files, and iconsets are not interchangeable. Generating them individually by hand is tedious and error-prone; this tool produces every required size and file name in one pass."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is an Android adaptive icon?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Since Android 8.0, launchers can mask and animate app icons into different shapes (circle, squircle, rounded square) depending on the device. This requires a separate foreground layer and background layer instead of one flat image. Turn on \"Adaptive Icon\" in Step 3 to generate both layers automatically."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does my notification icon need to be a silhouette?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Android specifically requires monochrome (single-color, transparent-background) notification icons — the system colors them itself based on the current theme. A full-color logo will either be rejected or rendered as a solid white block. This tool generates the correct silhouette automatically."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use this for a logo that isn't for a Flutter app?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The generated folder structure matches Flutter's conventions, but the underlying PNG/ICO/iconset files are standard formats used by native Android, iOS, and desktop apps too — you can still use the individual image files even if your project isn't built with Flutter."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "My background removal left a faint edge around the logo. What happened?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Background removal works by sampling the corner pixels and treating anything close to that color as background. Logos with soft gradients, anti-aliased edges, or a non-uniform background can leave a faint halo. Starting from a logo with a flat, uniform background gives the cleanest cutout."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does the generated ZIP overwrite my existing icons automatically?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No — it's a plain ZIP you download and merge into your project yourself. Copy each platform folder's contents into the matching path in your Flutter project, overwriting the existing icon files there. This gives you a chance to review everything before it touches your codebase."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Will this tool keep working the same way in the future?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The generator follows the icon size and folder-structure conventions defined by each platform (Android, iOS, Web, Windows, macOS, Linux) and by Flutter's own tooling. If a platform changes its requirements, this page will be updated to match — check the Developer Guide in the project repository for the current size tables."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use the generated icons in a commercial app?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. You retain full rights to the logo you upload and to every icon file generated from it — commercial use, client work, and published apps are all fine. The only thing to double-check is that you own or have the rights to the source logo itself; the generator can't verify that for you."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does the generator work offline after the page has loaded?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Once the page and its assets have finished loading, uploading a logo, generating icons, and downloading the ZIP all happen locally in the browser tab with no further network requests — you can disconnect from the internet and it will keep working for that session."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does the generated ZIP include my original uploaded image?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. The ZIP contains only the resized, platform-specific icon files (and a README with placement instructions) — not the original source image you uploaded."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens if my source image is too small?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The generator will still process it, but the largest generated sizes (like the 1024×1024 iOS App Store icon) will look soft or pixelated, since they're upscaled beyond your source resolution. Starting from at least 1024×1024 avoids this entirely."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does my icon look blurry after generating?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "This almost always means the source image was smaller than one or more of the generated sizes and had to be upscaled. Re-upload a larger source image — ideally 1024×1024 or bigger — and regenerate."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does my Android icon appear cropped on some devices?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Modern Android launchers mask adaptive icons into different shapes (circle, squircle, rounded square) per device, cropping anything outside a central \"safe zone.\" If your logo's important details sit near the edges of the canvas, enable Adaptive Icon generation and keep key content inside roughly the center 66% of the foreground layer."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I test the generated icons before shipping?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "After copying the files into your Flutter project, run the app on a real device or simulator for each platform you care about — launcher icon rendering (especially adaptive icon masking on Android) can only really be verified visually, since it varies by launcher and OS version. For iOS/macOS, also open Xcode and confirm the AppIcon.appiconset shows no missing-slot warnings."
+          }
+        }
+      ]
+    }
   </script>
 
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <style>
     html, body { background: #0A0D14; height: 100%; }
@@ -72,27 +256,30 @@
   </style>
 </head>
 <body>
-  <div id="loading">Loading…</div>
+<div id="loading">Loading…</div>
 
-  <!--
-    Fallback content for crawlers/clients that don't execute JavaScript
-    (some bots, link-preview scrapers, accessibility tools). Flutter Web
-    renders the real UI into <flutter-view> once flutter_bootstrap.js
-    runs, so this never shows in a normal browser — it exists purely so
-    something readable exists in the raw HTML response.
-  -->
-  <noscript>
-    <div style="max-width:640px;margin:80px auto;padding:24px;color:#E8EAF6;font-family:sans-serif;line-height:1.6;">
-      <h1>FLogo Generator</h1>
-      <p>Upload one logo and generate platform-perfect Flutter app icons for
+<!--
+  Fallback content for crawlers/clients that don't execute JavaScript
+  (some bots, link-preview scrapers, accessibility tools). Flutter Web
+  renders the real UI into <flutter-view> once flutter_bootstrap.js
+  runs, so this never shows in a normal browser — it exists purely so
+  something readable exists in the raw HTML response.
+-->
+<noscript>
+  <div style="max-width:640px;margin:80px auto;padding:24px;color:#E8EAF6;font-family:sans-serif;line-height:1.6;">
+    <h1>FLogo Generator</h1>
+    <p>Upload one logo and generate platform-perfect Flutter app icons for
       Android, iOS, Web, Windows, macOS, and Linux — sized, named, and
       folder-structured exactly as Flutter expects. Everything runs in
       your browser; nothing is ever uploaded to a server.</p>
-      <p>This app requires JavaScript to run. Please enable JavaScript in
+    <p>Free to use, with no account required. See the User Guide, Guides
+      &amp; Articles, About, and Contact pages linked from this site for
+      more detail.</p>
+    <p>This app requires JavaScript to run. Please enable JavaScript in
       your browser to use it.</p>
-    </div>
-  </noscript>
+  </div>
+</noscript>
 
-  <script src="flutter_bootstrap.js" async></script>
+<script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -84,4 +84,59 @@ const List<FaqItem> kFaqs = [
         'to match — check the Developer Guide in the project '
         'repository for the current size tables.',
   ),
+  FaqItem(
+    'Can I use the generated icons in a commercial app?',
+    'Yes. You retain full rights to the logo you upload and to every '
+        'icon file generated from it — commercial use, client work, and '
+        'published apps are all fine. The only thing to double-check is '
+        'that you own or have the rights to the source logo itself; the '
+        'generator can\'t verify that for you.',
+  ),
+  FaqItem(
+    'Does the generator work offline after the page has loaded?',
+    'Yes. Once the page and its assets have finished loading, uploading '
+        'a logo, generating icons, and downloading the ZIP all happen '
+        'locally in the browser tab with no further network requests — '
+        'you can disconnect from the internet and it will keep working '
+        'for that session.',
+  ),
+  FaqItem(
+    'Does the generated ZIP include my original uploaded image?',
+    'No. The ZIP contains only the resized, platform-specific icon '
+        'files (and a README with placement instructions) — not the '
+        'original source image you uploaded.',
+  ),
+  FaqItem(
+    'What happens if my source image is too small?',
+    'The generator will still process it, but the largest generated '
+        'sizes (like the 1024×1024 iOS App Store icon) will look soft '
+        'or pixelated, since they\'re upscaled beyond your source '
+        'resolution. Starting from at least 1024×1024 avoids this '
+        'entirely.',
+  ),
+  FaqItem(
+    'Why does my icon look blurry after generating?',
+    'This almost always means the source image was smaller than one or '
+        'more of the generated sizes and had to be upscaled. Re-upload a '
+        'larger source image — ideally 1024×1024 or bigger — and '
+        'regenerate.',
+  ),
+  FaqItem(
+    'Why does my Android icon appear cropped on some devices?',
+    'Modern Android launchers mask adaptive icons into different shapes '
+        '(circle, squircle, rounded square) per device, cropping '
+        'anything outside a central "safe zone." If your logo\'s '
+        'important details sit near the edges of the canvas, enable '
+        'Adaptive Icon generation and keep key content inside roughly '
+        'the center 66% of the foreground layer.',
+  ),
+  FaqItem(
+    'How do I test the generated icons before shipping?',
+    'After copying the files into your Flutter project, run the app on '
+        'a real device or simulator for each platform you care about — '
+        'launcher icon rendering (especially adaptive icon masking on '
+        'Android) can only really be verified visually, since it varies '
+        'by launcher and OS version. For iOS/macOS, also open Xcode and '
+        'confirm the AppIcon.appiconset shows no missing-slot warnings.',
+  ),
 ];
