@@ -62,3 +62,16 @@ web/
   original's canvas-pixel logic — worth a quick visual sanity check
   against the original tool's output once both are runnable side by
   side.
+
+## Deploying (AdSense / SEO note)
+
+Flutter Web draws onto a canvas, so crawlers can't read the UI. Before every
+build, regenerate the crawlable HTML copy of each page from `lib/data/*.dart`:
+
+```bash
+python3 tool/prerender.py
+flutter build web --release
+firebase deploy --only hosting
+```
+
+Re-run the script whenever you add/edit an article, FAQ, or legal text.

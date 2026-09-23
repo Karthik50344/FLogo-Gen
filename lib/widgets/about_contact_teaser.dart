@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
 
 /// Short "About FLogo Generator" / "Contact" cards on the homepage. Full
@@ -78,7 +79,7 @@ class _TeaserCardState extends State<_TeaserCard> {
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       child: GestureDetector(
-        onTap: () => Navigator.of(context).pushNamed(widget.route),
+        onTap: () => context.push(widget.route),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.all(20),

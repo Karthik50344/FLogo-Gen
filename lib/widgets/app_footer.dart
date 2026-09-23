@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/contact_info.dart';
+import '../services/device_info.dart';
 import '../services/download_helper.dart';
 import '../theme/app_colors.dart';
 
@@ -47,37 +49,37 @@ class AppFooter extends StatelessWidget {
             _FooterLink(
               icon: Icons.auto_stories_outlined,
               label: 'Guides & Articles',
-              onTap: () => Navigator.of(context).pushNamed('/guides'),
+              onTap: () => context.push('/guides'),
             ),
             const _Dot(),
             _FooterLink(
               icon: Icons.menu_book_outlined,
               label: 'User Guide',
-              onTap: () => Navigator.of(context).pushNamed('/user-guide'),
+              onTap: () => context.push('/user-guide'),
             ),
             const _Dot(),
             _FooterLink(
               icon: Icons.info_outline,
               label: 'About',
-              onTap: () => Navigator.of(context).pushNamed('/about'),
+              onTap: () => context.push('/about'),
             ),
             const _Dot(),
             _FooterLink(
               icon: Icons.mail_outline,
               label: 'Contact',
-              onTap: () => Navigator.of(context).pushNamed('/contact'),
+              onTap: () => context.push('/contact'),
             ),
             const _Dot(),
             _FooterLink(
               icon: Icons.shield_outlined,
               label: 'Privacy Policy',
-              onTap: () => Navigator.of(context).pushNamed('/privacy-policy'),
+              onTap: () => context.push('/privacy-policy'),
             ),
             const _Dot(),
             _FooterLink(
               icon: Icons.gavel_outlined,
               label: 'Terms & Conditions',
-              onTap: () => Navigator.of(context).pushNamed('/terms'),
+              onTap: () => context.push('/terms'),
             ),
             const _Dot(),
             const _FooterStatus(),
@@ -85,6 +87,8 @@ class AppFooter extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         const _ContactBlock(),
+        const SizedBox(height: 10),
+        _VersionBlock(version: DeviceInfo.version, buildNo: DeviceInfo.buildNumber)
       ],
     );
   }
@@ -216,3 +220,23 @@ class _ContactBlockState extends State<_ContactBlock> {
     );
   }
 }
+
+///Shows the current application version with build no.
+class _VersionBlock extends StatelessWidget {
+  final String version;
+  final String buildNo;
+  const _VersionBlock({super.key, required this.version, required this.buildNo});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      "V$version ($buildNo)",
+      style: TextStyle(
+        fontSize: 12,
+        color: AppColors.text3,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+}
+

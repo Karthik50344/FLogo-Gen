@@ -1,7 +1,9 @@
 import 'dart:html' as html;
 
+import 'package:flogo/services/device_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'data/articles_content.dart';
@@ -18,13 +20,13 @@ import 'theme/app_colors.dart';
 
 const String kSiteOrigin = 'https://flogo-gen.web.app';
 
-/// Route name → (title, meta description) for every *static* route. Used
+/// Route path → (title, meta description) for every *static* route. Used
 /// both for the <title> tag and the <meta name="description"> tag, so
 /// every crawlable page gets unique SEO metadata instead of every route
 /// inheriting the homepage's tags from index.html. Article routes
 /// (/guides/<slug>) aren't listed here — their copy comes from kArticles
-/// instead, see _SeoRouteObserver below. Keep this in sync with the
-/// `routes` map, widgets/site_nav_bar.dart, and web/sitemap.xml.
+/// instead, see _applySeo below. Keep this in sync with the GoRouter
+/// `routes` list below, widgets/site_nav_bar.dart, and web/sitemap.xml.
 const Map<String, (String title, String description)> kRouteSeo = {
   '/': (
     'FLogo Generator — Free Flutter App Icon Generator',
@@ -66,67 +68,127 @@ const Map<String, (String title, String description)> kRouteSeo = {
 };
 
 /// Keeps `document.title`, the meta-description tag, and the canonical
-/// link in sync with whichever route is on top of the stack — including
-/// on "back" navigation, when the revealed route's widget isn't
-/// necessarily rebuilt. This is what gives a Flutter Web SPA per-route
-/// SEO metadata despite having a single static index.html.
-class _SeoRouteObserver extends NavigatorObserver {
-  void _apply(Route<dynamic>? route) {
-    final name = route?.settings.name;
-    if (name == null) return;
-
-    String? title;
-    String? description;
-
-    if (kRouteSeo.containsKey(name)) {
-      (title, description) = kRouteSeo[name]!;
-    } else if (name.startsWith('/guides/')) {
-      final slug = name.substring('/guides/'.length);
-      final matches = kArticles.where((a) => a.slug == slug);
-      if (matches.isNotEmpty) {
-        title = '${matches.first.title} · FLogo Generator';
-        description = matches.first.metaDescription;
-      }
-    }
-
-    if (title == null) return;
-    html.document.title = title;
-
-    if (description != null) {
-      html.document
-          .querySelector('meta[name="description"]')
-          ?.setAttribute('content', description);
-      html.document
-          .querySelector('meta[property="og:description"]')
-          ?.setAttribute('content', description);
-    }
-    html.document
-        .querySelector('meta[property="og:title"]')
-        ?.setAttribute('content', title);
-    html.document
-        .querySelector('link[rel="canonical"]')
-        ?.setAttribute('href', '$kSiteOrigin$name');
-    html.document
-        .querySelector('meta[property="og:url"]')
-        ?.setAttribute('content', '$kSiteOrigin$name');
+/// link in sync with whichever route is current — called from every
+/// route's `builder` below (including on back/forward), which is what
+/// gives a Flutter Web SPA per-route SEO metadata despite having a single
+/// static index.html.
+void _applySeo(String path, {String? title, String? description}) {
+  if (title == null && kRouteSeo.containsKey(path)) {
+    (title, description) = kRouteSeo[path]!;
   }
+  if (title == null) return;
+  html.document.title = title;
 
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => _apply(route);
-
-  @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => _apply(previousRoute);
-
-  @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) => _apply(newRoute);
+  if (description != null) {
+    html.document
+        .querySelector('meta[name="description"]')
+        ?.setAttribute('content', description);
+    html.document
+        .querySelector('meta[property="og:description"]')
+        ?.setAttribute('content', description);
+  }
+  html.document
+      .querySelector('meta[property="og:title"]')
+      ?.setAttribute('content', title);
+  html.document
+      .querySelector('link[rel="canonical"]')
+      ?.setAttribute('href', '$kSiteOrigin$path');
+  html.document
+      .querySelector('meta[property="og:url"]')
+      ?.setAttribute('content', '$kSiteOrigin$path');
 }
 
-void main() {
+final GoRouter _router = GoRouter(
+  initialLocation: '/',
+  // Unknown route: fall back to Home rather than a blank/error page.
+  errorBuilder: (context, state) => const HomeScreen(),
+  routes: [
+    GoRoute(
+      path: '/',
+      name: 'home',
+      builder: (context, state) {
+        _applySeo('/');
+        return const HomeScreen();
+      },
+    ),
+    GoRoute(
+      path: '/privacy-policy',
+      name: 'privacy-policy',
+      builder: (context, state) {
+        _applySeo('/privacy-policy');
+        return const PrivacyPolicyScreen();
+      },
+    ),
+    GoRoute(
+      path: '/terms',
+      name: 'terms',
+      builder: (context, state) {
+        _applySeo('/terms');
+        return const TermsConditionsScreen();
+      },
+    ),
+    GoRoute(
+      path: '/user-guide',
+      name: 'user-guide',
+      builder: (context, state) {
+        _applySeo('/user-guide');
+        return const UserGuideScreen();
+      },
+    ),
+    GoRoute(
+      path: '/guides',
+      name: 'guides',
+      builder: (context, state) {
+        _applySeo('/guides');
+        return const GuidesListScreen();
+      },
+    ),
+    GoRoute(
+      path: '/about',
+      name: 'about',
+      builder: (context, state) {
+        _applySeo('/about');
+        return const AboutScreen();
+      },
+    ),
+    GoRoute(
+      path: '/contact',
+      name: 'contact',
+      builder: (context, state) {
+        _applySeo('/contact');
+        return const ContactScreen();
+      },
+    ),
+    // Dynamic /guides/<slug> article routes — one Article, one URL,
+    // without hand-writing a named route per article above.
+    GoRoute(
+      path: '/guides/:slug',
+      name: 'article',
+      builder: (context, state) {
+        final slug = state.pathParameters['slug']!;
+        final matches = kArticles.where((a) => a.slug == slug);
+        if (matches.isEmpty) {
+          _applySeo('/');
+          return const HomeScreen();
+        }
+        final article = matches.first;
+        _applySeo('/guides/$slug',
+            title: '${article.title} · FLogo Generator',
+            description: article.metaDescription);
+        return ArticleScreen(article: article);
+      },
+    ),
+  ],
+);
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   // Clean, path-based URLs (yoursite.com/privacy-policy) instead of
   // Flutter's default hash-based ones (yoursite.com/#/privacy-policy).
   // Hash fragments are effectively invisible to search engines, so this
   // one call matters more for SEO than anything in <head>.
   usePathUrlStrategy();
+  await DeviceInfo.loadDeviceInfo();
   runApp(const FlutterLogoGeneratorApp());
 }
 
@@ -137,10 +199,10 @@ class FlutterLogoGeneratorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AppState(),
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: kRouteSeo['/']!.$1,
         debugShowCheckedModeBanner: false,
-        navigatorObservers: [_SeoRouteObserver()],
+        routerConfig: _router,
         theme: ThemeData(
           useMaterial3: true,
           brightness: Brightness.dark,
@@ -152,40 +214,6 @@ class FlutterLogoGeneratorApp extends StatelessWidget {
             surface: AppColors.surface,
           ),
         ),
-        // Named routes give every page a real, bookmarkable, crawlable
-        // URL. Keep this map in sync with widgets/app_footer.dart's links,
-        // widgets/site_nav_bar.dart's kNavItems, kRouteSeo above, and
-        // web/sitemap.xml whenever a page is added or renamed.
-        initialRoute: '/',
-        routes: {
-          '/': (context) => const HomeScreen(),
-          '/privacy-policy': (context) => const PrivacyPolicyScreen(),
-          '/terms': (context) => const TermsConditionsScreen(),
-          '/user-guide': (context) => const UserGuideScreen(),
-          '/guides': (context) => const GuidesListScreen(),
-          '/about': (context) => const AboutScreen(),
-          '/contact': (context) => const ContactScreen(),
-        },
-        // Dynamic /guides/<slug> article routes — one Article, one URL,
-        // without hand-writing a named route per article above.
-        onGenerateRoute: (settings) {
-          final name = settings.name ?? '';
-          if (name.startsWith('/guides/')) {
-            final slug = name.substring('/guides/'.length);
-            final matches = kArticles.where((a) => a.slug == slug);
-            if (matches.isNotEmpty) {
-              return MaterialPageRoute(
-                settings: settings,
-                builder: (context) => ArticleScreen(article: matches.first),
-              );
-            }
-          }
-          // Unknown route: fall back to Home rather than a blank/error page.
-          return MaterialPageRoute(
-            settings: const RouteSettings(name: '/'),
-            builder: (context) => const HomeScreen(),
-          );
-        },
       ),
     );
   }

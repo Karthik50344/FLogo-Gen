@@ -50,81 +50,105 @@ class OutputTreeCard extends StatelessWidget {
     final lines = <_TreeLine>[];
     lines.add(_TreeLine('flutter_assets.zip', folder: true));
 
-    if (state.genNotif) {
-      lines.add(_TreeLine('  notification/', folder: true));
-      if (state.theme == 'both' || state.theme == 'light') {
-        lines.add(_TreeLine('    notification_icon_light.png'));
-      }
-      if (state.theme == 'both' || state.theme == 'dark') {
-        lines.add(_TreeLine('    notification_icon_dark.png'));
-      }
-    }
+    // Build the ordered list of top-level entries first, so the box-drawing
+    // connectors (├── vs └──) can be computed once the full count is known.
+    // Each entry is (header line, inner lines already indented one level).
+    final entries = <(String, List<String>)>[];
 
-    final platforms = state.platforms.toList();
-    for (var pi = 0; pi < platforms.length; pi++) {
-      final p = platforms[pi];
-      final isLast = pi == platforms.length - 1;
-      final prefix = isLast ? '└── ' : '├── ';
-      final childPrefix = isLast ? '    ' : '│   ';
-
+    for (final p in state.platforms) {
       if (p == 'android') {
-        lines.add(_TreeLine('  $prefix' 'android/app/src/main/res/', folder: true));
-        for (final folder in [
-          'mipmap-mdpi',
-          'mipmap-hdpi',
-          'mipmap-xhdpi',
-          'mipmap-xxhdpi',
-          'mipmap-xxxhdpi'
-        ]) {
-          lines.add(_TreeLine('  $childPrefix├── $folder/', folder: true));
-          lines.add(_TreeLine('  $childPrefix│   ├── ic_launcher.png'));
-          lines.add(_TreeLine('  $childPrefix│   ├── ic_launcher_round.png'));
-          if (state.genAdaptive) {
-            lines.add(_TreeLine('  $childPrefix│   └── ic_launcher_foreground.png'));
-          }
+        final inner = <String>['mipmap-mdpi/, mipmap-hdpi/, mipmap-xhdpi/, mipmap-xxhdpi/, mipmap-xxxhdpi/'];
+        inner.add('  each: ic_launcher.png, ic_launcher_round.png'
+            '${state.genAdaptive ? ', ic_launcher_foreground.png' : ''}');
+        if (state.genAdaptive) {
+          inner.add('mipmap-mdpi/ic_launcher_background.png');
+          inner.add('mipmap-anydpi-v26/ (adaptive icon XML)');
         }
-        lines.add(_TreeLine('  $childPrefix└── play_store_icon.png (512×512)'));
+        entries.add(('Android/', inner));
       }
 
       if (p == 'ios') {
-        lines.add(_TreeLine(
-            '  $prefix' 'ios/Runner/Assets.xcassets/AppIcon.appiconset/',
-            folder: true));
-        lines.add(_TreeLine('  $childPrefix├── Icon-App-20x20@1x.png … @3x.png'));
-        lines.add(_TreeLine('  $childPrefix├── Icon-App-60x60@2x.png … @3x.png'));
-        lines.add(_TreeLine('  $childPrefix└── ItunesArtwork@2x.png (1024×1024)'));
+        entries.add(('iOS/', [
+          'Contents.json',
+          'Icon-App-20x20@1x.png … @3x.png',
+          'Icon-App-60x60@2x.png … @3x.png',
+          'ItunesArtwork@2x.png (1024×1024)',
+        ]));
       }
 
       if (p == 'web') {
-        lines.add(_TreeLine('  $prefix' 'web/', folder: true));
-        lines.add(_TreeLine('  $childPrefix├── favicon.png (16×16)'));
-        lines.add(_TreeLine('  $childPrefix└── icons/', folder: true));
-        lines.add(_TreeLine('  $childPrefix    ├── Icon-192.png'));
-        lines.add(_TreeLine('  $childPrefix    ├── Icon-512.png'));
-        lines.add(_TreeLine('  $childPrefix    ├── Icon-maskable-192.png'));
-        lines.add(_TreeLine('  $childPrefix    └── Icon-maskable-512.png'));
+        entries.add(('Web/', [
+          'favicon.png (16×16)',
+          'favicon.ico',
+          'icons/',
+          '  Icon-192.png, Icon-512.png',
+          '  Icon-maskable-192.png, Icon-maskable-512.png',
+        ]));
       }
 
       if (p == 'linux') {
-        lines.add(_TreeLine('  $prefix' 'linux/', folder: true));
-        lines.add(_TreeLine('  $childPrefix├── my_application.png (48×48)'));
-        lines.add(_TreeLine('  $childPrefix├── my_application@2x.png (64×64)'));
-        lines.add(_TreeLine('  $childPrefix├── 128x128/my_application.png', folder: true));
-        lines.add(_TreeLine('  $childPrefix└── 256x256/my_application.png', folder: true));
+        entries.add(('Linux/', [
+          'my_application.png (48×48)',
+          'my_application@2x.png (64×64)',
+          'my_application_128.png',
+          'my_application_256.png',
+        ]));
       }
 
       if (p == 'windows') {
-        lines.add(_TreeLine('  $prefix' 'windows/runner/resources/', folder: true));
-        lines.add(_TreeLine('  $childPrefix├── app_icon.ico (16,32,48,256px)'));
-        lines.add(_TreeLine('  $childPrefix└── app_icon.png (256×256)'));
+        entries.add(('Windows/', [
+          'app_icon.ico (16,32,48,256px)',
+          'app_icon.png (256×256)',
+        ]));
       }
 
       if (p == 'macos') {
-        lines.add(_TreeLine(
-            '  $prefix' 'macos/Runner/Assets.xcassets/AppIcon.appiconset/',
-            folder: true));
-        lines.add(_TreeLine('  $childPrefix├── app_icon_16.png … app_icon_1024.png'));
+        entries.add(('macOS/', [
+          'Contents.json',
+          'app_icon_16.png … app_icon_1024.png',
+        ]));
       }
+    }
+
+    if (state.genNotif) {
+      final inner = <String>[];
+      if (state.theme == 'both' || state.theme == 'light') {
+        inner.add('notification_icon_light.png');
+      }
+      if (state.theme == 'both' || state.theme == 'dark') {
+        inner.add('notification_icon_dark.png');
+      }
+      if (state.platforms.contains('android')) {
+        inner.add('android/');
+        inner.add('  mdpi/ … xxxhdpi/ic_notification.png');
+      }
+      entries.add(('notification/', inner));
+    }
+
+    // Root-level files: store-listing icons and README — not nested
+    // inside any platform folder, since they aren't part of the app.
+    final rootFiles = <String>[
+      if (state.platforms.contains('android')) 'play_store_icon.png (512×512, store listing only)',
+      if (state.platforms.contains('ios')) 'app_store_icon.png (1024×1024, store listing only)',
+      'README.md (where to place each file)',
+    ];
+
+    for (var i = 0; i < entries.length; i++) {
+      final isLast = i == entries.length - 1 && rootFiles.isEmpty;
+      final prefix = isLast ? '└── ' : '├── ';
+      final childPrefix = isLast ? '    ' : '│   ';
+      final (header, inner) = entries[i];
+      lines.add(_TreeLine('  $prefix$header', folder: true));
+      for (var j = 0; j < inner.length; j++) {
+        final innerLast = j == inner.length - 1;
+        final connector = innerLast ? '└── ' : '├── ';
+        lines.add(_TreeLine('  $childPrefix$connector${inner[j]}'));
+      }
+    }
+
+    for (var i = 0; i < rootFiles.length; i++) {
+      final isLast = i == rootFiles.length - 1;
+      lines.add(_TreeLine('  ${isLast ? '└── ' : '├── '}${rootFiles[i]}'));
     }
 
     return lines;

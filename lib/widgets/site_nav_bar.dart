@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
 
 class NavItemData {
@@ -27,14 +28,17 @@ class SiteNavBar extends StatelessWidget {
   const SiteNavBar({super.key, this.showBack = false});
 
   void _go(BuildContext context, String route) {
-    final current = ModalRoute.of(context)?.settings.name;
+    final current = GoRouterState.of(context).uri.path;
     if (current == route) return;
-    Navigator.of(context).pushNamedAndRemoveUntil(route, (r) => false);
+    // push (not go) so the previous page stays on the stack — otherwise
+    // the AppBar's back button has nothing left to pop to after a
+    // nav-bar click.
+    context.push(route);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = ModalRoute.of(context)?.settings.name;
+    final currentRoute = GoRouterState.of(context).uri.path;
     return LayoutBuilder(builder: (context, constraints) {
       final wide = constraints.maxWidth > 760;
       return Container(
@@ -49,7 +53,8 @@ class SiteNavBar extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 4),
                 child: IconButton(
                   tooltip: 'Back',
-                  onPressed: () => Navigator.of(context).maybePop(),
+                  onPressed: () =>
+                      context.canPop() ? context.pop() : context.go('/'),
                   icon: const Icon(Icons.arrow_back, color: AppColors.text, size: 20),
                 ),
               ),

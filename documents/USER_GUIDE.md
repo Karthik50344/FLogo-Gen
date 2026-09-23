@@ -46,9 +46,9 @@ Each platform generates a different bundle:
 
 | Platform | What you get |
 |---|---|
-| **Android** | `mipmap-*` launcher icons (regular + round), Play Store 512×512 icon, and adaptive icon layers if enabled |
-| **iOS** | Full `AppIcon.appiconset` (all required sizes) + `Contents.json` |
-| **Web** | Favicon, standard PWA icons, and maskable icons for `manifest.json` |
+| **Android** | `mipmap-*` launcher icons (regular + round) for every density, and adaptive icon layers if enabled — plus a `play_store_icon.png` (512×512) at the top of the ZIP |
+| **iOS** | Full `AppIcon.appiconset` (all required sizes) + `Contents.json` — plus an `app_store_icon.png` (1024×1024) at the top of the ZIP |
+| **Web** | `favicon.png` + `favicon.ico`, standard PWA icons, and maskable icons for `manifest.json` |
 | **Linux** | Desktop icon at the standard GTK sizes |
 | **Windows** | A multi-resolution `.ico` plus a 256×256 PNG app icon |
 | **macOS** | Full `AppIcon.appiconset` iconset + `Contents.json` |
@@ -97,20 +97,32 @@ saves `flutter_assets.zip` to your downloads folder.
 
 ## Using the output in your Flutter project
 
-The ZIP mirrors your project's real folder structure. For each
-platform you selected, copy the matching folder's contents into the
-same path in your Flutter project, overwriting the existing icon
-files:
+The ZIP is a flat, browsable handoff — one capitalized folder per
+platform you selected (not a mirror of your project's actual folder
+paths), plus two store-only icons and a notification folder at the
+top level:
 
-- `android/...` → your project's `android/` folder
-- `ios/...` → your project's `ios/` folder
-- `web/...` → your project's `web/` folder
-- `linux/...` → your project's `linux/` folder
-- `windows/...` → your project's `windows/` folder
-- `macos/...` → your project's `macos/` folder
-- `notification/...` → wherever your app expects notification assets
-  (these aren't auto-wired into any platform config — add them to
-  your notification plugin's setup manually)
+- `Android/` — `mipmap-mdpi/`, `mipmap-hdpi/`, `mipmap-xhdpi/`,
+  `mipmap-xxhdpi/`, `mipmap-xxxhdpi/` (and `mipmap-anydpi-v26/` if
+  adaptive icons are on). Copy each folder into your project's
+  `android/app/src/main/res/`, same name, replacing what's there.
+- `iOS/` — copy every file, including `Contents.json`, into
+  `ios/Runner/Assets.xcassets/AppIcon.appiconset/`.
+- `Web/` — copy `favicon.png`/`favicon.ico` into `web/`, and the
+  contents of `Web/icons/` into `web/icons/`.
+- `Linux/` → your project's `linux/` folder.
+- `Windows/` → `windows/runner/resources/`.
+- `macOS/` — copy every file, including `Contents.json`, into
+  `macos/Runner/Assets.xcassets/AppIcon.appiconset/`.
+- `notification/` — general-purpose light/dark notification icons,
+  plus Android-specific density folders under `notification/android/`
+  if you generated notification icons with Android selected. These
+  aren't auto-wired into any platform config — add them to your
+  notification plugin's setup manually.
+- `play_store_icon.png` (512×512) and `app_store_icon.png`
+  (1024×1024), at the top of the ZIP — not part of the app bundle,
+  upload these directly to your Play Console / App Store Connect
+  listing.
 
 A `README.md` is included in every ZIP with the same instructions,
 generated specifically for the platforms/options you picked.

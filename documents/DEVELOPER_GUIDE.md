@@ -13,6 +13,7 @@ client-side in the browser tab.
 | Concern | Package |
 |---|---|
 | State management | `provider` (a single `ChangeNotifier`) |
+| Routing | `go_router` (`GoRouter`/`MaterialApp.router`, path-based URLs) |
 | Image decode/resize/compositing | `image` |
 | ZIP packaging | `archive` |
 | File picking (click-to-browse) | `file_picker` |
@@ -284,12 +285,13 @@ render them:
 - `screens/article_screen.dart` — renders one `Article`'s full
   content (heading + paragraphs per section).
 
-Article routes are **not** hardcoded one-by-one in `main.dart`'s
-`routes` map — `onGenerateRoute` matches any `/guides/<slug>` path,
-looks the slug up in `kArticles`, and builds an `ArticleScreen` for
-it (falling back to Home for an unknown slug). `_TitleRouteObserver`
-does the same slug lookup to set the browser tab title. **To add a
-13th article, you only need to add one `Article` entry to
+Article routes are **not** hardcoded one-by-one — `main.dart`'s
+`GoRouter` has a single `GoRoute(path: '/guides/:slug', ...)` that
+matches any `/guides/<slug>` path, looks the slug up in `kArticles`,
+and builds an `ArticleScreen` for it (falling back to Home for an
+unknown slug). The same route's `builder` calls `_applySeo()` to set
+the browser tab title/meta description from the matched article. **To
+add a 13th article, you only need to add one `Article` entry to
 `kArticles`** — routing, titles, and the guides index all pick it up
 automatically. You do still need to add its URL to
 `web/sitemap.xml` by hand, since that file is static.
@@ -335,27 +337,36 @@ aren't reachable by URL:
 
 `main.dart` now calls `usePathUrlStrategy()` (from
 `flutter_web_plugins`, ships with the SDK — no `pub.dev` fetch
-needed) before `runApp`, and `MaterialApp` uses a `routes:` map
-(`/`, `/privacy-policy`, `/terms`, `/user-guide`) instead of
-`home:`. Without `usePathUrlStrategy()`, Flutter Web defaults to
+needed) before `runApp`, and the app uses `MaterialApp.router` with a
+`GoRouter` (`routerConfig:`) instead of `MaterialApp`'s `home:`/
+`routes:`. Without `usePathUrlStrategy()`, Flutter Web defaults to
 hash-based URLs (`/#/privacy-policy`), which search engines
-effectively don't index as distinct pages. `widgets/app_footer.dart`
-navigates with `Navigator.pushNamed('/user-guide')` etc. instead of
-`Navigator.push(MaterialPageRoute(...))`, specifically so the
-browser's address bar actually updates.
+effectively don't index as distinct pages. Every in-app link
+navigates with `context.push('/user-guide')` etc. (the `go_router`
+`BuildContext` extension) instead of `Navigator.push(MaterialPageRoute
+(...))`, specifically so the browser's address bar actually updates
+and the URL is real/bookmarkable. Back-button behavior relies on
+`context.push` (not `context.go`) so the previous page stays on the
+navigation stack — see `widgets/site_nav_bar.dart`'s `_go()` for the
+canonical pattern, including the `context.canPop() ? context.pop() :
+context.go('/')` guard the AppBar's back button uses so it still does
+something sensible on a fresh deep link with nothing to pop to.
 
 **If you add a new page, update all four of these together:**
-`main.dart`'s `routes` map, `kRouteTitles` (same file),
-`widgets/app_footer.dart`'s links, and `web/sitemap.xml`.
+`main.dart`'s `GoRouter` `routes` list, `kRouteSeo` (same file),
+`widgets/site_nav_bar.dart`'s `kNavItems` and `widgets/app_footer.dart`'s
+links, and `web/sitemap.xml`.
 
 ### 2. Per-route browser tab titles
 
-`main.dart`'s `_TitleRouteObserver` (a `NavigatorObserver`) sets
-`document.title` on every push/pop/replace, keyed off
-`kRouteTitles`. This is deliberately centralized rather than done in
-each screen's `initState` — a screen's `State` object isn't
-recreated on `Navigator.pop()`, so a per-screen approach fails to
-reset the title when the user hits "back."
+Each `GoRoute` in `main.dart` calls a shared `_applySeo(path, {title,
+description})` helper from its `builder`, keyed off `kRouteSeo` (or,
+for `/guides/:slug`, the matched `Article`'s own title/description).
+This runs on every navigation, including back/forward, which is what
+a `NavigatorObserver`-based approach would otherwise need to
+replicate — with `go_router`, the route `builder` itself is the
+simplest place to do it, since it's re-invoked whenever that route
+becomes active.
 
 ### 3. `<head>` metadata (`web/index.html`)
 
@@ -437,6 +448,24 @@ copy becomes actual, indexable text instead of pixels; it's not a
 substitute for semantic markup if this app ever needs deeper
 on-page SEO than "the page is indexed at all."
 
+## Output ZIP layout
+
+The generated ZIP is a **flat, browsable** handoff, not a mirror of a
+Flutter project's real folder paths — see the comment above
+`_addAndroid` in `generate_worker.dart` for the full rationale. In
+short: one capitalized folder per selected platform (`Android/`,
+`iOS/`, `Web/`, `Linux/`, `Windows/`, `macOS/`) holding just the
+generated image/icon files, plus a top-level `notification/` folder
+(if enabled) and two store-only icons at the ZIP root —
+`play_store_icon.png` and `app_store_icon.png` — since those aren't
+part of the app bundle itself. `generateReadme()` (also in
+`generate_worker.dart`) builds a per-selection `README.md` from the
+`_kPlacementDocs` map, one entry per platform id, spelling out exactly
+which folder in the user's own Flutter project each file/subfolder
+maps to. **If you change what a platform's folder contains, update
+its `_kPlacementDocs` entry in the same change** — the README should
+never describe a layout the ZIP doesn't actually have.
+
 ## Adding a new output platform
 
 1. Add its metadata to `kPlatforms` in `platform_specs.dart` (id,
@@ -444,16 +473,20 @@ on-page SEO than "the page is indexed at all."
    Step 2 grid.
 2. Add a size table if it needs one (follow the pattern of
    `kIosIconSizes`/`kMacIconSizes`).
-3. Add a `_addYourPlatform(Archive archive, img.Image baseImg)`
-   method in `generate_controller.dart`, following the shape of the
-   existing `_addX` methods, and call it from the `switch` in
-   `generate()`.
+3. Add an `_addYourPlatform(Archive archive, img.Image baseImg)`
+   function in `generate_worker.dart`, following the shape of the
+   existing `_addAndroid`/`_addIos`/etc. functions, and call it from
+   the `switch` in `buildPlatformAssets`. Keep any store-listing-only
+   asset (not part of the app bundle) at the ZIP root rather than
+   inside the platform's folder, matching `play_store_icon.png`/
+   `app_store_icon.png`.
 4. If the new platform needs a config file (like iOS/macOS's
-   `Contents.json`), build the string/JSON directly in that method
+   `Contents.json`), build the string/JSON directly in that function
    and add it via `archive.addFile(ArchiveFile.string(path,
    content))`.
-5. Update `_generateReadme` with usage instructions for the new
-   platform, and add a matching branch to
+5. Add an entry for the platform to `_kPlacementDocs` and
+   `generateReadme()` in `generate_worker.dart` with placement
+   instructions for the new platform, and add a matching branch to
    `output_tree_card.dart`'s `_buildTreeLines` so the live preview
    reflects it.
 

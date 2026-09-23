@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/articles_content.dart';
 import '../theme/app_colors.dart';
@@ -93,7 +94,7 @@ class _ArticleCardState extends State<_ArticleCard> {
         onEnter: (_) => setState(() => _hovering = true),
         onExit: (_) => setState(() => _hovering = false),
         child: GestureDetector(
-          onTap: () => Navigator.of(context).pushNamed('/guides/${widget.article.slug}'),
+          onTap: () => context.push('/guides/${widget.article.slug}'),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.all(20),

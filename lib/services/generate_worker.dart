@@ -106,10 +106,20 @@ void buildPlatformAssets(Archive archive, img.Image baseImg, String platform, bo
   }
 }
 
+// NOTE ON LAYOUT: the ZIP is a *flat, browsable* handoff — one capitalised
+// folder per selected platform (Android/, iOS/, Web/, ...) containing just
+// the generated assets, not the deep `android/app/src/main/res/...`-style
+// path a Flutter project expects on disk. Store-listing icons (Play Store,
+// App Store) sit at the ZIP root next to README.md, not inside a platform
+// folder, since they aren't part of the app bundle itself. README.md
+// spells out exactly where each file goes. Only the selected platforms'
+// folders are ever added to the archive.
+
 void _addAndroid(Archive archive, img.Image baseImg, bool genAdaptive) {
-  const base = 'android/app/src/main/res';
+  const base = 'Android';
 
   kAndroidMipmapSizes.forEach((folder, sizes) {
+    // folder is e.g. 'mipmap-xhdpi' — used verbatim as the subfolder name.
     final launcherSize = sizes[0];
     final foregroundSize = sizes[1];
 
@@ -132,9 +142,6 @@ void _addAndroid(Archive archive, img.Image baseImg, bool genAdaptive) {
     }
   });
 
-  final playStore = ImageService.resizeImage(baseImg, 512, bgColor: const Color(0xFFFFFFFF));
-  _addFile(archive, 'android/play_store_icon.png', ImageService.encodePng(playStore));
-
   if (genAdaptive) {
     const adaptiveXml = '''<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -144,10 +151,15 @@ void _addAndroid(Archive archive, img.Image baseImg, bool genAdaptive) {
     archive.addFile(ArchiveFile.string('$base/mipmap-anydpi-v26/ic_launcher.xml', adaptiveXml));
     archive.addFile(ArchiveFile.string('$base/mipmap-anydpi-v26/ic_launcher_round.xml', adaptiveXml));
   }
+
+  // Play Store listing icon — not part of the app bundle, so it sits at
+  // the ZIP root rather than inside Android/.
+  final playStore = ImageService.resizeImage(baseImg, 512, bgColor: const Color(0xFFFFFFFF));
+  _addFile(archive, 'play_store_icon.png', ImageService.encodePng(playStore));
 }
 
 void _addIos(Archive archive, img.Image baseImg) {
-  const base = 'ios/Runner/Assets.xcassets/AppIcon.appiconset';
+  const base = 'iOS';
   for (final spec in kIosIconSizes) {
     final canvas = ImageService.resizeImage(baseImg, spec.size, bgColor: const Color(0xFFFFFFFF));
     _addFile(archive, '$base/${spec.name}', ImageService.encodePng(canvas));
@@ -169,51 +181,63 @@ void _addIos(Archive archive, img.Image baseImg) {
     'info': {'author': 'flutter_logo_generator', 'version': 1},
   });
   archive.addFile(ArchiveFile.string('$base/Contents.json', contents));
+
+  // App Store listing icon (1024×1024, fully opaque) — not part of the
+  // app bundle, so it sits at the ZIP root rather than inside iOS/.
+  final appStore = ImageService.resizeImage(baseImg, 1024, bgColor: const Color(0xFFFFFFFF));
+  _addFile(archive, 'app_store_icon.png', ImageService.encodePng(appStore));
 }
 
 void _addWeb(Archive archive, img.Image baseImg) {
-  final favicon = ImageService.resizeImage(baseImg, 16);
-  _addFile(archive, 'web/favicon.png', ImageService.encodePng(favicon));
+  const base = 'Web';
+
+  final favicon16 = ImageService.resizeImage(baseImg, 16);
+  _addFile(archive, '$base/favicon.png', ImageService.encodePng(favicon16));
+
+  final faviconIco = ImageService.generateIco(baseImg, const [16, 32, 48]);
+  _addFile(archive, '$base/favicon.ico', faviconIco);
 
   final icon192 = ImageService.resizeImage(baseImg, 192);
-  _addFile(archive, 'web/icons/Icon-192.png', ImageService.encodePng(icon192));
+  _addFile(archive, '$base/icons/Icon-192.png', ImageService.encodePng(icon192));
 
   final icon512 = ImageService.resizeImage(baseImg, 512);
-  _addFile(archive, 'web/icons/Icon-512.png', ImageService.encodePng(icon512));
+  _addFile(archive, '$base/icons/Icon-512.png', ImageService.encodePng(icon512));
 
   final maskable192 =
       ImageService.resizeImage(baseImg, 192, maskable: true, bgColor: const Color(0xFFFFFFFF));
-  _addFile(archive, 'web/icons/Icon-maskable-192.png', ImageService.encodePng(maskable192));
+  _addFile(archive, '$base/icons/Icon-maskable-192.png', ImageService.encodePng(maskable192));
 
   final maskable512 =
       ImageService.resizeImage(baseImg, 512, maskable: true, bgColor: const Color(0xFFFFFFFF));
-  _addFile(archive, 'web/icons/Icon-maskable-512.png', ImageService.encodePng(maskable512));
+  _addFile(archive, '$base/icons/Icon-maskable-512.png', ImageService.encodePng(maskable512));
 }
 
 void _addLinux(Archive archive, img.Image baseImg) {
+  const base = 'Linux';
   final app48 = ImageService.resizeImage(baseImg, 48);
-  _addFile(archive, 'linux/my_application.png', ImageService.encodePng(app48));
+  _addFile(archive, '$base/my_application.png', ImageService.encodePng(app48));
 
   final app64 = ImageService.resizeImage(baseImg, 64);
-  _addFile(archive, 'linux/my_application@2x.png', ImageService.encodePng(app64));
+  _addFile(archive, '$base/my_application@2x.png', ImageService.encodePng(app64));
 
   final app128 = ImageService.resizeImage(baseImg, 128);
-  _addFile(archive, 'linux/128x128/my_application.png', ImageService.encodePng(app128));
+  _addFile(archive, '$base/my_application_128.png', ImageService.encodePng(app128));
 
   final app256 = ImageService.resizeImage(baseImg, 256);
-  _addFile(archive, 'linux/256x256/my_application.png', ImageService.encodePng(app256));
+  _addFile(archive, '$base/my_application_256.png', ImageService.encodePng(app256));
 }
 
 void _addWindows(Archive archive, img.Image baseImg) {
+  const base = 'Windows';
   final app256 = ImageService.resizeImage(baseImg, 256);
-  _addFile(archive, 'windows/runner/resources/app_icon.png', ImageService.encodePng(app256));
+  _addFile(archive, '$base/app_icon.png', ImageService.encodePng(app256));
 
   final ico = ImageService.generateIco(baseImg, const [16, 32, 48, 256]);
-  _addFile(archive, 'windows/runner/resources/app_icon.ico', ico);
+  _addFile(archive, '$base/app_icon.ico', ico);
 }
 
 void _addMacos(Archive archive, img.Image baseImg) {
-  const base = 'macos/Runner/Assets.xcassets/AppIcon.appiconset';
+  const base = 'macOS';
   for (final size in kMacIconSizes) {
     final canvas = ImageService.resizeImage(baseImg, size, bgColor: const Color(0xFFFFFFFF));
     _addFile(archive, '$base/app_icon_$size.png', ImageService.encodePng(canvas));
@@ -234,72 +258,153 @@ void _addMacos(Archive archive, img.Image baseImg) {
 }
 
 void addNotificationIcons(Archive archive, img.Image baseImg, GenerateJob job) {
+  const base = 'notification';
   const size = 96;
 
   if (job.theme == 'both' || job.theme == 'light') {
     final light = ImageService.generateNotificationIcon(baseImg, size, Color(job.lightBg), Color(job.lightFg));
-    _addFile(archive, 'notification/notification_icon_light.png', ImageService.encodePng(light));
+    _addFile(archive, '$base/notification_icon_light.png', ImageService.encodePng(light));
 
     if (job.platforms.contains('android')) {
       kAndroidNotifDrawableSizes.forEach((folder, drawSize) {
+        // folder is e.g. 'drawable-xhdpi' — used verbatim as the subfolder name.
         final c = ImageService.generateNotificationIcon(
             baseImg, drawSize, Color(job.lightBg), Color(job.lightFg));
-        _addFile(archive, 'android/app/src/main/res/$folder/ic_notification.png', ImageService.encodePng(c));
+        _addFile(archive, '$base/android/$folder/ic_notification.png', ImageService.encodePng(c));
       });
     }
   }
 
   if (job.theme == 'both' || job.theme == 'dark') {
     final dark = ImageService.generateNotificationIcon(baseImg, size, Color(job.darkBg), Color(job.darkFg));
-    _addFile(archive, 'notification/notification_icon_dark.png', ImageService.encodePng(dark));
+    _addFile(archive, '$base/notification_icon_dark.png', ImageService.encodePng(dark));
   }
 }
 
+// Per-platform "where do these go" instructions, keyed by platform id.
+// Only the sections for job.platforms actually get written to the README,
+// so the file always matches exactly what's in the ZIP next to it.
+const Map<String, String> _kPlacementDocs = {
+  'android': '''### Android — `Android/`
+Your Flutter project expects these under `android/app/src/main/res/`, one
+folder per screen density — copy each `mipmap-<density>/` folder here
+straight into `android/app/src/main/res/`, same name, replacing what's
+there:
+
+    Android/mipmap-mdpi/, mipmap-hdpi/, mipmap-xhdpi/, mipmap-xxhdpi/, mipmap-xxxhdpi/
+                                        → android/app/src/main/res/mipmap-<density>/
+    Android/mipmap-anydpi-v26/         → android/app/src/main/res/mipmap-anydpi-v26/ (adaptive icon XML)''',
+  'ios': '''### iOS — `iOS/`
+Copy every file in this folder, including `Contents.json`, into
+`ios/Runner/Assets.xcassets/AppIcon.appiconset/`, replacing what's there.''',
+  'web': '''### Web — `Web/`
+Copy `favicon.png` and `favicon.ico` into your Flutter project's `web/`
+folder, and the contents of `Web/icons/` into `web/icons/`. Confirm
+`web/manifest.json` still points at `Icon-192.png` and `Icon-512.png` by
+those names.''',
+  'linux': '''### Linux — `Linux/`
+Copy these into your project's `linux/` folder:
+
+    my_application.png       (48×48)
+    my_application@2x.png    (64×64)
+    my_application_128.png   → rename to 128x128/my_application.png
+    my_application_256.png   → rename to 256x256/my_application.png''',
+  'windows': '''### Windows — `Windows/`
+Copy `app_icon.ico` and `app_icon.png` into
+`windows/runner/resources/`, replacing the existing files.''',
+  'macos': '''### macOS — `macOS/`
+Copy every file in this folder, including `Contents.json`, into
+`macos/Runner/Assets.xcassets/AppIcon.appiconset/`, replacing what's there.''',
+};
+
 String generateReadme(GenerateJob job) {
-  final platforms = job.platforms.join(', ');
   final buffer = StringBuffer();
-  buffer.writeln('# Flutter Assets — Generated by Flutter Logo Generator');
+  buffer.writeln('# Flutter App Icons — Generated by FLogo Generator');
   buffer.writeln();
-  buffer.writeln('## Platforms: $platforms');
+  buffer.writeln(
+      'This ZIP contains one capitalised folder per platform you selected,');
+  buffer.writeln(
+      'with just the generated image/icon files — not a full copy of your');
+  buffer.writeln(
+      'project\'s folder structure. Follow the section below for each');
+  buffer.writeln('platform to see exactly where each file belongs.');
   buffer.writeln();
-  buffer.writeln('## How to use');
+  buffer.writeln('## What\'s in this ZIP');
   buffer.writeln();
-  buffer.writeln('### Android');
-  buffer.writeln("Copy the contents of `android/` into your Flutter project's `android/` directory.");
-  buffer.writeln('The `play_store_icon.png` goes in your Play Store listing.');
-  if (job.genAdaptive) {
-    buffer.writeln('Adaptive icons are included for API 26+ (Android 8+).');
+  for (final p in job.platforms) {
+    buffer.writeln('- ${_platformLabel(p)}/');
   }
+  if (job.genNotif) {
+    buffer.writeln('- notification/');
+  }
+  if (job.platforms.contains('android')) {
+    buffer.writeln('- play_store_icon.png (512×512, store listing only)');
+  }
+  if (job.platforms.contains('ios')) {
+    buffer.writeln('- app_store_icon.png (1024×1024, store listing only)');
+  }
+  buffer.writeln('- README.md (this file)');
   buffer.writeln();
-  buffer.writeln('### iOS');
-  buffer.writeln('Copy `ios/Runner/Assets.xcassets/AppIcon.appiconset/` into your project.');
-  buffer.writeln('Replace the existing AppIcon.appiconset folder.');
+  buffer.writeln('## Where each file goes');
   buffer.writeln();
-  buffer.writeln('### Web');
-  buffer.writeln("Copy the contents of `web/` into your Flutter project's `web/` folder.");
-  buffer.writeln('Make sure your `manifest.json` references the icon paths correctly.');
-  buffer.writeln();
-  buffer.writeln('### Linux');
-  buffer.writeln("Copy the contents of `linux/` into your project's `linux/` folder.");
-  buffer.writeln();
-  buffer.writeln('### Windows');
-  buffer.writeln('Copy `windows/runner/resources/app_icon.ico` and `app_icon.png` to your project.');
-  buffer.writeln();
-  buffer.writeln('### macOS');
-  buffer.writeln('Replace the AppIcon.appiconset folder in your macOS project.');
-  buffer.writeln();
-  buffer.writeln('### Notification Icons');
-  buffer.writeln('The `notification/` folder contains icons for push notifications.');
-  if (job.genNotif && job.platforms.contains('android')) {
+  for (final p in job.platforms) {
+    final doc = _kPlacementDocs[p];
+    if (doc != null) {
+      buffer.writeln(doc);
+      buffer.writeln();
+    }
+  }
+  if (job.platforms.contains('android')) {
     buffer.writeln(
-        'Android notification icons are also in `android/app/src/main/res/drawable-*/ic_notification.png`.');
+        '`play_store_icon.png` is not part of the app — upload it directly to');
+    buffer.writeln('your Play Console store listing.');
+    buffer.writeln();
   }
-  buffer.writeln();
+  if (job.platforms.contains('ios')) {
+    buffer.writeln(
+        '`app_store_icon.png` is not part of the app bundle — upload it directly');
+    buffer.writeln('in App Store Connect.');
+    buffer.writeln();
+  }
+  if (job.genNotif) {
+    buffer.writeln('### Notification icons — `notification/`');
+    buffer.writeln(
+        '`notification_icon_light.png` / `notification_icon_dark.png` are');
+    buffer.writeln(
+        'general-purpose — place them wherever your notification code expects them.');
+    if (job.platforms.contains('android')) {
+      buffer.writeln(
+          '`notification/android/` has density-specific versions that map to');
+      buffer.writeln(
+          '`android/app/src/main/res/drawable-<density>/ic_notification.png`');
+      buffer.writeln('(the folder names already match, e.g. `drawable-xhdpi/`).');
+    }
+    buffer.writeln();
+  }
   buffer.writeln('## Notes');
   buffer.writeln('- All processing was done locally in your browser');
   buffer.writeln('- No images were uploaded to any server');
   buffer.writeln('- Generated: ${DateTime.now().toUtc().toIso8601String()}');
   return buffer.toString();
+}
+
+String _platformLabel(String id) {
+  switch (id) {
+    case 'android':
+      return 'Android';
+    case 'ios':
+      return 'iOS';
+    case 'web':
+      return 'Web';
+    case 'linux':
+      return 'Linux';
+    case 'windows':
+      return 'Windows';
+    case 'macos':
+      return 'macOS';
+    default:
+      return id;
+  }
 }
 
 String _jsonEncodePretty(Map<String, dynamic> data) {

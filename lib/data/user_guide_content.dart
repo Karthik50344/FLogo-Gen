@@ -73,11 +73,13 @@ const List<LegalSection> kUserGuideSections = [
         'folder.',
   ]),
   LegalSection('Using the Output in Your Flutter Project', [
-    'The ZIP mirrors your project\'s real folder structure. For each '
-        'platform you selected, copy the matching folder\'s contents '
-        'into the same path in your Flutter project, overwriting the '
-        'existing icon files (android/, ios/, web/, linux/, windows/, '
-        'macos/).',
+    'The ZIP contains one capitalised folder per platform you selected '
+        '(Android/, iOS/, Web/, Linux/, Windows/, macOS/) with just the '
+        'generated image files, not a full copy of your project\'s '
+        'folder structure. The included README.md maps every file to '
+        'exactly where it belongs in your Flutter project — some '
+        'platforms, Android especially, split icons across several '
+        'density-specific folders that aren\'t worth spelling out here.',
     'The notification/ folder isn\'t auto-wired into any platform '
         'config — add those assets to your notification plugin\'s '
         'setup manually.',

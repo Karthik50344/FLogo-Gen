@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/articles_content.dart';
 import '../theme/app_colors.dart';
 
@@ -36,7 +37,7 @@ class GuidesTeaserSection extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pushNamed('/guides'),
+              onPressed: () => context.push('/guides'),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -93,7 +94,7 @@ class _GuideCardState extends State<_GuideCard> {
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       child: GestureDetector(
-        onTap: () => Navigator.of(context).pushNamed('/guides/${widget.article.slug}'),
+        onTap: () => context.push('/guides/${widget.article.slug}'),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.all(18),

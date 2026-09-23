@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/article_model.dart';
 import '../data/articles_content.dart';
@@ -147,7 +148,7 @@ class ArticleScreen extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
-          onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/', (r) => false),
+          onTap: () => context.push('/'),
           child: const Text('Home',
               style: TextStyle(fontSize: 13, color: AppColors.text3, fontWeight: FontWeight.w500)),
         ),
@@ -156,7 +157,7 @@ class ArticleScreen extends StatelessWidget {
           child: Text('/', style: TextStyle(fontSize: 13, color: AppColors.text3)),
         ),
         GestureDetector(
-          onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/guides', (r) => false),
+          onTap: () => context.push('/guides'),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -198,7 +199,7 @@ class ArticleScreen extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               ElevatedButton(
-                onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil('/', (r) => false),
+                onPressed: () => context.push('/'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.accent,
                   foregroundColor: Colors.white,
@@ -219,15 +220,15 @@ class ArticleScreen extends StatelessWidget {
             children: [
               _InlineLink(
                 label: 'User Guide',
-                onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/user-guide', (r) => false),
+                onTap: () => context.push('/user-guide'),
               ),
               _InlineLink(
                 label: 'About FLogo Generator',
-                onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/about', (r) => false),
+                onTap: () => context.push('/about'),
               ),
               _InlineLink(
                 label: 'Contact',
-                onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/contact', (r) => false),
+                onTap: () => context.push('/contact'),
               ),
             ],
           ),
@@ -303,7 +304,7 @@ class _RelatedRowState extends State<_RelatedRow> {
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       child: GestureDetector(
-        onTap: () => Navigator.of(context).pushReplacementNamed('/guides/${widget.article.slug}'),
+        onTap: () => context.pushReplacement('/guides/${widget.article.slug}'),
         child: Container(
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(14),
